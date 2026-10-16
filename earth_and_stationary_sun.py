@@ -2,10 +2,10 @@ import math
 import matplotlib.pyplot as plt
 
 #This will be the Sun and Earth only model
-AU = 1.495978707e11
-G = 6.67e-11
-M_SUN = 1.98892e30
-timestep = 1000
+AU = 1.495978707e11 #meters
+G = 6.67e-11 #N m^2 kg^-2
+M_SUN = 1.98892e30 #kg
+timestep = 1000 #seconds
 
 #declare starting positions anf velocities of planetary bodies
 x_sun = y_sun = 0
@@ -17,13 +17,6 @@ x_velocity_earth = 0
 y_velocity_earth = -1 * math.sqrt(G * M_SUN / AU ) #clockwise orbits
 
 """
-TODO
-what is the best approach:
-    - update x then y?
-    - update position then velocity?
-
-could define global timestep/increment simulation function to update all variables at once *__main__* ?
-
 Update planet pseudocode from textbook (uses euler-cromer):
     - calculate distance from sun
     - compute new velocity for x and y
@@ -31,37 +24,30 @@ Update planet pseudocode from textbook (uses euler-cromer):
     - return new position and velocity information
 """
 
+def acceleration(x_position, y_position):
+    seperation = math.sqrt(x_position**2 + y_position**2)
+    k = -G * M_SUN / seperation**3
+    return x_position * k, y_position * k
+
 def earth_update(x_position, y_position, x_velocity, y_velocity, timestep):
     """
-    this function is written poorly
-    needs to be able to update, x,y position and x,y velocity
-    can set an r value at the beginning to reuse or does this need to be reupdated with a,b,c,d values as function progresses?
     """
-    seperation = math.sqrt(x_position**2 + y_position**2)
-
     #calculate all a values
-    a_x_position = x_velocity 
-    a_y_position = y_velocity 
-    a_x_velocity = (-1 * G * M_SUN * x_position) / (seperation)**3                                           
-    a_y_velocity = (-1 * G * M_SUN * y_position) / (seperation)**3  
+    a_x_position , a_y_position = x_velocity,  y_velocity 
+    a_x_velocity, a_y_velocity = acceleration(x_position, y_position)
 
     #calculate all b values
-    b_x_position = x_velocity 
-    b_y_position = y_velocity 
-    b_x_velocity = (-1 * G * M_SUN * (x_position + 0.5 * timestep * a_x_velocity)) / (seperation)**3    
-    b_y_velocity = (-1 * G * M_SUN * (y_position + 0.5 * timestep * a_y_velocity)) / (seperation)**3      
-  
+    b_x_position, b_y_position = x_velocity + 0.5*timestep*a_x_velocity, y_velocity + 0.5*timestep*a_y_velocity
+    b_x_velocity, b_y_velocity = acceleration(x_position + 0.5*timestep*a_x_position, y_position + 0.5*timestep*a_y_position)
+
     #calculate all c values
-    c_x_position = x_velocity 
-    c_y_position = y_velocity 
-    c_x_velocity = (-1 * G * M_SUN * (x_position + 0.5 * timestep * b_x_velocity)) / (seperation)**3   
-    c_y_velocity = (-1 * G * M_SUN * (y_position + 0.5 * timestep * b_y_velocity)) / (seperation)**3      
+    c_x_position, c_y_position = x_velocity + 0.5*timestep*b_x_velocity, y_velocity + 0.5*timestep*b_y_velocity
+    c_x_velocity, c_y_velocity = acceleration(x_position + 0.5*timestep*b_x_position, y_position + 0.5*timestep*b_y_position)
    
     #calculate all d values
-    d_x_position = x_velocity 
-    d_y_position = y_velocity 
-    d_x_velocity = (-1 * G * M_SUN * (x_position + timestep * c_x_velocity)) / (seperation)**3 
-    d_y_velocity = (-1 * G * M_SUN * (y_position + timestep * c_y_velocity)) / (seperation)**3
+    d_x_position, d_y_position = x_velocity + timestep*c_x_velocity, y_velocity + timestep*c_y_velocity
+    d_x_velocity, d_y_velocity = acceleration(x_position + timestep*c_x_position, y_position + timestep*c_y_position)
+   
 
     #calculate weighted average of values to update all variables
     updated_x_position = x_position + ((timestep/6) * (a_x_position + 2*b_x_position + 2*c_x_position + d_x_position))
@@ -73,7 +59,7 @@ def earth_update(x_position, y_position, x_velocity, y_velocity, timestep):
 x_plotting_earth = [x_earth/AU]
 y_plotting_earth = [y_earth]
 
-for i in range(40000):
+for i in range(35000):
     x_earth, y_earth, x_velocity_earth, y_velocity_earth = earth_update(x_earth, y_earth, x_velocity_earth, y_velocity_earth, timestep)
     x_plotting_earth.append(x_earth/AU)
     y_plotting_earth.append(y_earth/AU)

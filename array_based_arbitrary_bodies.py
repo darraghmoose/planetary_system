@@ -1,54 +1,99 @@
 import math
 import numpy as np
+import time
+
+def acceleration(subject_x: float, subject_y: float, affecting_x: float, affecting_y: float, affecting_index: int) -> tuple:
+    
+    #calculate distance between both bodies
+    seperation = math.sqrt((subject_x - affecting_x)**2 + (subject_y - affecting_y)**2)
+    #calculate constant to multiply (xj-xi)     
+    k = -G * masses[affecting_index] / seperation**3
+
+    return k * (affecting_x - subject_x), k * (affecting_y - subject_y) * k
+
+def body_update(subject_index: int, affecting_index: int, timestep: float) -> tuple:
+    """
+    Accepts the index of subject body whose velocity and position is being updated, index of affecting body who is pulling on subject and the timestep
+    Returns updated position and velocity of subject in x and y
+
+    modififcation:
+    accept indicies of bodies in question - subject body and affecting body
+    calculate how affecting body changes position and velocity of subject body
+    return updated position and velocity of subject body
+    """
+    #find position and velocity of subject body and position of affecting body
+    #Subject body
+    x_position, y_position = x_positions[subject_index], y_positions[subject_index]
+    x_velocity, y_velocity = x_velocities[subject_index], y_velocities[subject_index]
+
+    #Position of body affecting subject body
+    affecting_body_x_position, affecting_body_y_position = x_positions[affecting_index], y_positions[affecting_index]
+
+
+    #calculate all a values
+    a_x_position , a_y_position = x_velocity,  y_velocity           #updates both positions at once
+    a_x_velocity, a_y_velocity = acceleration(x_position, y_position, affecting_body_x_position, affecting_body_y_position, affecting_index)
+
+    #calculate all b values
+    b_x_position, b_y_position = x_velocity + 0.5*timestep*a_x_velocity, y_velocity + 0.5*timestep*a_y_velocity
+    b_x_velocity, b_y_velocity = acceleration(x_position + 0.5*timestep*a_x_position, y_position + 0.5*timestep*a_y_position, affecting_body_x_position, affecting_body_y_position, affecting_index)
+
+    #calculate all c values
+    c_x_position, c_y_position = x_velocity + 0.5*timestep*b_x_velocity, y_velocity + 0.5*timestep*b_y_velocity
+    c_x_velocity, c_y_velocity = acceleration(x_position + 0.5*timestep*b_x_position, y_position + 0.5*timestep*b_y_position, affecting_body_x_position, affecting_body_y_position, affecting_index)
+   
+    #calculate all d values
+    d_x_position, d_y_position = x_velocity + timestep*c_x_velocity, y_velocity + timestep*c_y_velocity
+    d_x_velocity, d_y_velocity = acceleration(x_position + timestep*c_x_position, y_position + timestep*c_y_position, affecting_body_x_position, affecting_body_y_position, affecting_index)
+
+    #calculate weighted average of values to update all variables
+    updated_x_position = x_position + ((timestep/6) * (a_x_position + 2*b_x_position + 2*c_x_position + d_x_position))
+    updated_y_position = y_position + ((timestep/6) * (a_y_position + 2*b_y_position + 2*c_y_position + d_y_position))
+    updated_x_velocity = x_velocity + ((timestep/6) * (a_x_velocity + 2*b_x_velocity + 2*c_x_velocity + d_x_velocity))
+    updated_y_velocity = y_velocity + ((timestep/6) * (a_y_velocity + 2*b_y_velocity + 2*c_y_velocity + d_y_velocity))
+    return updated_x_position, updated_y_position, updated_x_velocity, updated_y_velocity
 
 #useful constants
 AU = 1.495978707e11
 G = 6.67e-11
 M_SUN = 1.98892e30
 timestep = 100
+simulation_time = 100
 
 #use arrays to store data for each body
 body_names = ["Sun", "Earth"]
-x_positions = np.array([0, 0])
+x_positions = np.array([0, 1*AU])
 y_positions = np.array([0, 0])
 x_velocities = np.array([0, 0])
-y_velocities = np.array([0, 0])
+y_velocities = np.array([0, -1 * math.sqrt(G * M_SUN / AU )])
 masses = np.array([1.98892e30, 5.9742E24])
 
-def update_body(subject_index, x_position_array, y_position_array, x_velocity_array, y_velocity_array, timestep):
-    """
-    this function is not yet functional.
-    can set an r value at the beginning to reuse or does this need to be reupdated with a,b,c,d values as function progresses?
-    """
-    seperation = math.sqrt(x_position_array**2 + y_position_array**2)
+#main loop to run simulation
+start_time = time.time()
+for loop in range(simulation_time):
+    #below loop does 1 iteration per entire loop
+    for i in range(len(body_names)):        #how does body i move
+        for j in range(len(body_names)):    #from the efefcts of body j
+            if j != i:                      #it cannot affect itself
+                #run update body but need to modify function first
+                x_positions[i], y_positions[i], x_velocities[i], y_velocities[i] = body_update(i, j, timestep=timestep)
+                #division by 0 error but still continues to complete abcd once
 
-    #calculate all a values
-    a_x_position = x_velocity_array 
-    a_y_position = y_velocity_array 
-    a_x_velocity = (-1 * G * M_SUN * x_position_array) / (seperation)**3                                           
-    a_y_velocity = (-1 * G * M_SUN * y_position_array) / (seperation)**3  
+#timing testing
+end_time = time.time()
+runtime = end_time - start_time
+print(f'Runtime for {simulation_time} iterations: {round(runtime, 4)} seconds')
+print(f'Average simulation step time: {runtime/simulation_time}')
 
-    #calculate all b values
-    b_x_position = x_velocity_array 
-    b_y_position = y_velocity_array 
-    b_x_velocity = (-1 * G * M_SUN * (x_position_array + 0.5 * timestep * a_x_velocity)) / (seperation)**3    
-    b_y_velocity = (-1 * G * M_SUN * (y_position_array + 0.5 * timestep * a_y_velocity)) / (seperation)**3      
-  
-    #calculate all c values
-    c_x_position = x_velocity_array 
-    c_y_position = y_velocity_array 
-    c_x_velocity = (-1 * G * M_SUN * (x_position_array + 0.5 * timestep * b_x_velocity)) / (seperation)**3   
-    c_y_velocity = (-1 * G * M_SUN * (y_position_array + 0.5 * timestep * b_y_velocity)) / (seperation)**3      
-   
-    #calculate all d values
-    d_x_position = x_velocity_array 
-    d_y_position = y_velocity_array 
-    d_x_velocity = (-1 * G * M_SUN * (x_position_array + timestep * c_x_velocity)) / (seperation)**3 
-    d_y_velocity = (-1 * G * M_SUN * (y_position_array + timestep * c_y_velocity)) / (seperation)**3
 
-    #calculate weighted average of values to update all variables
-    updated_x_position = x_position_array + ((timestep/6) * (a_x_position + 2*b_x_position + 2*c_x_position + d_x_position))
-    updated_y_position = y_position_array + ((timestep/6) * (a_y_position + 2*b_y_position + 2*c_y_position + d_y_position))
-    updated_x_velocity = x_velocity_array + ((timestep/6) * (a_x_velocity + 2*b_x_velocity + 2*c_x_velocity + d_x_velocity))
-    updated_y_velocity = y_velocity_array + ((timestep/6) * (a_y_velocity + 2*b_y_velocity + 2*c_y_velocity + d_y_velocity))
-    return updated_x_position, updated_y_position, updated_x_velocity, updated_y_velocity
+"""
+Plotting:
+need to save position data for all bodies across time to plot
+consider using 2D array 
+#columns = #planets
+#rows = iteration at each time
+
+gives array of size(#planets, simulation_time)
+will need to initialise with positions at time=0
+
+"""
