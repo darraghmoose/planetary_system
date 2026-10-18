@@ -1,6 +1,7 @@
 import math
 import numpy as np
 import time
+import matplotlib.pyplot as plt
 
 def acceleration(subject_x: float, subject_y: float, affecting_x: float, affecting_y: float, affecting_index: int) -> tuple:
     
@@ -58,7 +59,7 @@ AU = 1.495978707e11
 G = 6.67e-11
 M_SUN = 1.98892e30
 timestep = 100
-simulation_time = 100
+simulation_time = timestep * 10000
 
 #use arrays to store data for each body
 body_names = ["Sun", "Earth"]
@@ -67,6 +68,16 @@ y_positions = np.array([0, 0])
 x_velocities = np.array([0, 0])
 y_velocities = np.array([0, -1 * math.sqrt(G * M_SUN / AU )])
 masses = np.array([1.98892e30, 5.9742E24])
+
+#create array to store data which can be plotted
+positions_plotting = np.zeros((len(body_names), simulation_time))   #need to update to store x and y data
+
+x_testing_array = [1*AU]
+y_testing_array = [0]
+
+#add initial positions to positions_plotting array
+
+
 
 #main loop to run simulation
 start_time = time.time()
@@ -77,13 +88,22 @@ for loop in range(simulation_time):
             if j != i:                      #it cannot affect itself
                 #run update body but need to modify function first
                 x_positions[i], y_positions[i], x_velocities[i], y_velocities[i] = body_update(i, j, timestep=timestep)
-                #division by 0 error but still continues to complete abcd once
+                if i == 1:
+                    x_testing_array.append(x_positions[i])
+                    y_testing_array.append(y_positions[i])
+
+
 
 #timing testing
 end_time = time.time()
 runtime = end_time - start_time
 print(f'Runtime for {simulation_time} iterations: {round(runtime, 4)} seconds')
 print(f'Average simulation step time: {runtime/simulation_time}')
+
+
+plt.plot(x_testing_array, y_testing_array)
+plt.show()
+#dont like the look of the plot
 
 
 """
