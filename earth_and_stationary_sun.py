@@ -1,4 +1,5 @@
 import math
+import numpy as np
 import matplotlib.pyplot as plt
 
 #This will be the Sun and Earth only model
@@ -15,14 +16,6 @@ x_earth = 1 * AU
 y_earth = 0
 x_velocity_earth = 0
 y_velocity_earth = -1 * math.sqrt(G * M_SUN / AU ) #clockwise orbits
-
-"""
-Update planet pseudocode from textbook (uses euler-cromer):
-    - calculate distance from sun
-    - compute new velocity for x and y
-    - compute new position in x and y
-    - return new position and velocity information
-"""
 
 def acceleration(x_position, y_position):
     seperation = math.sqrt(x_position**2 + y_position**2)
@@ -58,22 +51,39 @@ def earth_update(x_position, y_position, x_velocity, y_velocity, timestep):
 
 x_plotting_earth = [x_earth/AU]
 y_plotting_earth = [y_earth]
+counter=0
 
 for i in range(35000):
     x_earth, y_earth, x_velocity_earth, y_velocity_earth = earth_update(x_earth, y_earth, x_velocity_earth, y_velocity_earth, timestep)
     x_plotting_earth.append(x_earth/AU)
     y_plotting_earth.append(y_earth/AU)
+    if -0.0001*AU<y_earth<0.0001*AU and 1-0.0001*AU<x_earth<1.0001*AU:
+        print("success")
+        year_time = i
+        break
 
+print(f'Year time: {i*timestep}')
 
-    net_velocity = math.sqrt(x_velocity_earth**2 + y_velocity_earth**2)
-    print(net_velocity)
+print(counter)
 
+plt.figure(figsize=(8, 8))
 plt.plot(x_plotting_earth, y_plotting_earth)
 plt.xlim(-1.05, 1.05)
 plt.ylim(-1.05, 1.05)
 plt.show()
 
 """
+Want to find when 1 orbit has been complete
+
+
+
+
+
+
+
+
+
+
 Problem: seperation is increasing by oders of magnitude and eventually blows up (E+104)
 guess: issue is with update order (updating all 4 variables at once)
 FIXED: doc outlining formulae has V * x_i when it should be v_{xi}. Fuming

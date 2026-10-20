@@ -2,6 +2,7 @@ import math
 import numpy as np
 import time
 import matplotlib.pyplot as plt
+#from tqdm import tqdm
 
 def acceleration(subject_x: float, subject_y: float, affecting_x: float, affecting_y: float, affecting_index: int) -> tuple:
     
@@ -59,7 +60,7 @@ AU = 1.495978707e11
 G = 6.67e-11
 M_SUN = 1.98892e30
 timestep = 100
-simulation_time = timestep * 10000
+simulation_time = timestep * 6000
 
 #use arrays to store data for each body
 body_names = ["Sun", "Earth"]
@@ -92,6 +93,8 @@ for loop in range(simulation_time):
                 if i == 1:
                     x_testing_array.append(x_positions[i])
                     y_testing_array.append(y_positions[i])
+
+                    print(i)
 
 
 
