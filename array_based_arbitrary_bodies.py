@@ -88,6 +88,7 @@ for loop in range(simulation_time):
             if j != i:                      #it cannot affect itself
                 #run update body but need to modify function first
                 x_positions[i], y_positions[i], x_velocities[i], y_velocities[i] = body_update(i, j, timestep=timestep)
+                #cant confirm if working yet
                 if i == 1:
                     x_testing_array.append(x_positions[i])
                     y_testing_array.append(y_positions[i])
