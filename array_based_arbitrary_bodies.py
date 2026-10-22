@@ -11,7 +11,7 @@ def acceleration(subject_x: float, subject_y: float, affecting_x: float, affecti
     #calculate constant to multiply (xj-xi)     
     k = -G * masses[affecting_index] / seperation**3
 
-    return k * (affecting_x - subject_x), k * (affecting_y - subject_y) * k
+    return k * (affecting_x - subject_x), k * (affecting_y - subject_y) 
 
 def body_update(subject_index: int, affecting_index: int, timestep: float) -> tuple:
     """
@@ -60,7 +60,8 @@ AU = 1.495978707e11
 G = 6.67e-11
 M_SUN = 1.98892e30
 timestep = 100
-simulation_time = timestep * 6000
+num_steps = 1000
+simulation_time = timestep * num_steps #time at simulation step i = i*timestep
 
 #use arrays to store data for each body
 body_names = ["Sun", "Earth"]
@@ -71,18 +72,19 @@ y_velocities = np.array([0, -1 * math.sqrt(G * M_SUN / AU )])
 masses = np.array([1.98892e30, 5.9742E24])
 
 #create array to store data which can be plotted
-positions_plotting = np.zeros((len(body_names), simulation_time))   #need to update to store x and y data
+positions_plotting = np.zeros((len(body_names), num_steps))   #need to update to store x and y data
+print(positions_plotting.shape)
+
 
 x_testing_array = [1*AU]
 y_testing_array = [0]
 
 #add initial positions to positions_plotting array
-
-
+#yet to do 
 
 #main loop to run simulation
 start_time = time.time()
-for loop in range(simulation_time):
+for loop in range(num_steps):
     #below loop does 1 iteration per entire loop
     for i in range(len(body_names)):        #how does body i move
         for j in range(len(body_names)):    #from the efefcts of body j
@@ -94,21 +96,18 @@ for loop in range(simulation_time):
                     x_testing_array.append(x_positions[i])
                     y_testing_array.append(y_positions[i])
 
-                    print(i)
 
 
 
 #timing testing
 end_time = time.time()
 runtime = end_time - start_time
-print(f'Runtime for {simulation_time} iterations: {round(runtime, 4)} seconds')
-print(f'Average simulation step time: {runtime/simulation_time}')
+print(f'Runtime for {simulation_time/timestep} iterations: {round(runtime, 4)} seconds')
 
 
 plt.plot(x_testing_array, y_testing_array)
 plt.show()
-#dont like the look of the plot
-
+#plot wrong
 
 """
 Plotting:

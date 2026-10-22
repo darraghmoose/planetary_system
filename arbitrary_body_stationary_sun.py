@@ -71,23 +71,6 @@ plt.plot(x_plotting_earth, y_plotting_earth)
 plt.show()
 
 """
-Want to find when 1 orbit has been complete
-
-
-
-
-
-
-
-
-
-
-Problem: seperation is increasing by oders of magnitude and eventually blows up (E+104)
-guess: issue is with update order (updating all 4 variables at once)
-FIXED: doc outlining formulae has V * x_i when it should be v_{xi}. Fuming
-good sign is position and velocity are remaining mostly constant across 20 iterations. 
-
-problem: plotting x against y shows curve far from a circle
-while magnitude of velocity seems to be accurate, direction seems wrong
-FIXED: just needed more iterations
+TODO
+Implement acis crossing method to simulation to more accurately calculate crossing point
 """
