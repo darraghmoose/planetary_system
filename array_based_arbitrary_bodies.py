@@ -13,23 +13,19 @@ def acceleration(subject_x: float, subject_y: float, affecting_x: float, affecti
 
     return k * (affecting_x - subject_x), k * (affecting_y - subject_y) 
 
-def body_update(subject_index: int, affecting_index: int, timestep: float) -> tuple:
+def body_update(subject_index: int, affecting_index: int, loop: int , timestep: float) -> tuple:
     """
     Accepts the index of subject body whose velocity and position is being updated, index of affecting body who is pulling on subject and the timestep
     Returns updated position and velocity of subject in x and y
-
-    modififcation:
-    accept indicies of bodies in question - subject body and affecting body
-    calculate how affecting body changes position and velocity of subject body
-    return updated position and velocity of subject body
     """
     #find position and velocity of subject body and position of affecting body
     #Subject body
-    x_position, y_position = x_positions[subject_index], y_positions[subject_index]
-    x_velocity, y_velocity = x_velocities[subject_index], y_velocities[subject_index]
+    prev_loop = loop - 1
+    x_position, y_position = x_positions[prev_loop][subject_index], y_positions[prev_loop][subject_index]
+    x_velocity, y_velocity = x_velocities[prev_loop][subject_index], y_velocities[prev_loop][subject_index]
 
     #Position of body affecting subject body
-    affecting_body_x_position, affecting_body_y_position = x_positions[affecting_index], y_positions[affecting_index]
+    affecting_body_x_position, affecting_body_y_position = x_positions[prev_loop][affecting_index], y_positions[prev_loop][affecting_index]
 
 
     #calculate all a values
@@ -60,43 +56,42 @@ AU = 1.495978707e11
 G = 6.67e-11
 M_SUN = 1.98892e30
 timestep = 100
-num_steps = 1000
+num_steps = 6
 simulation_time = timestep * num_steps #time at simulation step i = i*timestep
 
 #use arrays to store data for each body
 body_names = ["Sun", "Earth"]
-x_positions = np.array([0, 1*AU])
-y_positions = np.array([0, 0])
-x_velocities = np.array([0, 0])
-y_velocities = np.array([0, -1 * math.sqrt(G * M_SUN / AU )])
 masses = np.array([1.98892e30, 5.9742E24])
+#create arrays of equal dimensions to store position and velocity data
+x_positions = np.zeros((num_steps,len(body_names)))
+y_positions = np.zeros((num_steps,len(body_names)))
+x_velocities = np.zeros((num_steps,len(body_names)))
+y_velocities = np.zeros((num_steps,len(body_names)))
+#initialise these arrays with system's starting positions
+x_positions[0] = np.array([0, 1*AU]); print(f'X-position[0][1] = {x_positions[0][1]}')
+y_positions[0] = np.array([0, 0])
+x_velocities[0] = np.array([0, 0])
+y_velocities[0] = np.array([0, -1 * math.sqrt(G * M_SUN / AU )])
 
-#create array to store data which can be plotted
-positions_plotting = np.zeros((len(body_names), num_steps))   #need to update to store x and y data
-print(positions_plotting.shape)
 
-
+#testing
 x_testing_array = [1*AU]
 y_testing_array = [0]
 
-#add initial positions to positions_plotting array
-#yet to do 
-
 #main loop to run simulation
 start_time = time.time()
-for loop in range(num_steps):
+for loop in range(1, num_steps): #begin at index [1] as initial positions have already been declared
     #below loop does 1 iteration per entire loop
     for i in range(len(body_names)):        #how does body i move
-        for j in range(len(body_names)):    #from the efefcts of body j
+        for j in range(1):#len(body_names)):    #from the efefcts of body j
             if j != i:                      #it cannot affect itself
                 #run update body but need to modify function first
-                x_positions[i], y_positions[i], x_velocities[i], y_velocities[i] = body_update(i, j, timestep=timestep)
-                #cant confirm if working yet
-                if i == 1:
-                    x_testing_array.append(x_positions[i])
-                    y_testing_array.append(y_positions[i])
-
-
+                next_x_position, next_y_position, next_x_velocity, next_y_velocity = body_update(i, j, loop, timestep=timestep)
+                #save next positions to array structure
+                x_positions[loop][i] = next_x_position
+                y_positions[loop][i] = next_y_position                
+                x_velocities[loop][i] = next_x_velocity             
+                y_velocities[loop][i] = next_y_velocity
 
 
 #timing testing
@@ -104,10 +99,17 @@ end_time = time.time()
 runtime = end_time - start_time
 print(f'Runtime for {simulation_time/timestep} iterations: {round(runtime, 4)} seconds')
 
+print(x_positions.shape)
 
-plt.plot(x_testing_array, y_testing_array)
+for i in range(0, num_steps):
+    print(x_positions[i,1])
+
+
+
+#print(len(x_positions[0:num_steps, 1]))
+plt.plot(x_positions[0:num_steps, 1], y_positions[0:num_steps, 1])
 plt.show()
-#plot wrong
+#plot wrong </3
 
 """
 Plotting:
