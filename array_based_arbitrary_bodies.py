@@ -2,7 +2,7 @@ import math
 import numpy as np
 import time
 import matplotlib.pyplot as plt
-#from tqdm import tqdm
+from tqdm import tqdm
 
 def acceleration(x_positions, y_positions) -> tuple:
     """ Function accepts x and y positions of all bodies at once and calculates the acceleration applied to all bodies simultaneously. 
@@ -72,13 +72,12 @@ y_velocities[0] = np.array([0, -1 * math.sqrt(G * M_SUN / AU ), -1 * math.sqrt(G
 
 #main simulation loop
 start_time = time.time()
-for loop in range(1, num_steps):
+for loop in tqdm(range(1, num_steps), ncols=100 ):
     x_positions[loop], y_positions[loop], x_velocities[loop], y_velocities[loop] = body_update(x_positions[loop-1], y_positions[loop-1], x_velocities[loop-1], y_velocities[:][loop-1], timestep)
 
 #display simulation runtime data to terminal
 end_time = time.time()
 runtime = end_time - start_time
-print(f'Array Method')
 print(f'Simulation time: {timestep*num_steps} seconds')
 print(f'Runtime for {num_steps} iterations: {round(runtime, 4)} seconds')
 print(f'{round(num_steps/runtime, 2)} iterations per second')
