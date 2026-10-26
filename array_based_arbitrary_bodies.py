@@ -1,26 +1,32 @@
-import math
 import time
-import random
 import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
-def initial_velocity(radius):
-    #returns initial velocity of planet at the start of simulaiton based only on orbital radius
-    #
-    for i in range(len(radius)):
-        if radius[i] == 0:
-            radius[i] = np.inf
-    velocity = math.sqrt(G * masses[0] / radius )
-    return velocity
-
 def body_initial_positions(radii):
     #intake radius of planets orbit and return random x,y coords to start planet at
-    theta = np.random.uniform(0, 2*np.pi, size = len(radii))
+    theta = np.random.uniform(0, 2*np.pi, size = len(radii))    #theta in radians
     random_x = radii * np.cos(theta)   
     random_y = radii * np.sin(theta)
+    #ensure sun remains at (0,0)
+    random_x[0], random_y[0] = (0.0, 0.0)
 
     return random_x, random_y
+
+def initial_velocity(x_start: np.ndarray, y_start: np.ndarray):
+    #returns initial velocity of planets at the start of simulaiton based only on orbital radius
+    initial_x_velocity = np.zeros(len(x_start))
+    initial_y_velocity = np.zeros(len(y_start))
+    orbit_radius = np.sqrt(x_start**2 + y_start**2)
+
+    for i in range(len(orbit_radius)):
+        if orbit_radius[i] == 0:
+            continue
+        speed = np.sqrt(G * masses[0] / orbit_radius[i])
+        initial_x_velocity[i] = speed * y_start[i] / orbit_radius[i]
+        initial_y_velocity[i] = -speed * x_start[i] / orbit_radius[i]
+    
+    return initial_x_velocity, initial_y_velocity
 
 def acceleration(x_positions, y_positions) -> tuple:
     """ Function accepts x and y positions of all bodies at once and calculates the acceleration applied to all bodies simultaneously. 
@@ -72,34 +78,32 @@ AU = 1.495978707e11
 G = 6.67e-11
 M_SUN = 1.98892e30
 timestep = 3600 #3600 seconds = 1 hour
-num_steps = 2 * (365 * 24) # gives just over 1 earth year simulation time
+num_steps = 5 * (365 * 24)  #multiple of earth years
 
 #use arrays to store data for each body
-body_names = np.array(["Sun", "Earth", "Mars"])
-masses = np.array([1.98892e30, 5.9742E24, 6.4169E23])
-initial_radii = np.array([0, 1.495978707e11, 2.27956E11])
+body_names = np.array(["Sun","Mercury" ,"Earth", "Mars"])
+masses = np.array([1.98892e30, 3.301E23 , 5.9742E24, 6.4169E23])
+initial_radii = np.array([0, 0.387*AU , 1.495978707e11, 2.27956E11])
 
 #create blank arrays of equal dimensions to store position and velocity data
 x_positions = np.zeros((num_steps,len(body_names))); y_positions = np.zeros((num_steps,len(body_names)))
 x_velocities = np.zeros((num_steps,len(body_names))); y_velocities = np.zeros((num_steps,len(body_names)))
 
-#initialise these arrays with starting positions of system
+
+#initialise position of all bodies surrounding the sun
 x_positions[0], y_positions[0] = body_initial_positions(initial_radii)
 
-#initialise planet positions
-for i in range(1, len(body_names)):
-    ... #use functions to update bodies
+#initialise velocities of all planets ensuring to set sun's velocity to 0
+x_velocities[0], y_velocities[0] = initial_velocity(x_positions[0], y_positions[0])
 
 #initialise momentum of sun to give system zero net momentum
-for i in range(0, 1):
-    ... #in for loop so binary system can be considered
+x_velocities[0, 0] = -np.sum(masses[1:] * x_velocities[0, 1:]) / masses[0]
+y_velocities[0, 0] = -np.sum(masses[1:] * y_velocities[0, 1:]) / masses[0]
 
-x_velocities[0] = np.array([0, 0, 0])
-y_velocities[0] = np.array([0, -1 * math.sqrt(G * M_SUN / AU ), -1 * math.sqrt(G * M_SUN / 227.956E9 )]) 
- 
+
 #main simulation loop
 start_time = time.time()
-for loop in tqdm(range(1, num_steps), ncols=100 ):
+for loop in tqdm(range(1, num_steps), ncols=90 ):
     x_positions[loop], y_positions[loop], x_velocities[loop], y_velocities[loop] = body_update(x_positions[loop-1], y_positions[loop-1], x_velocities[loop-1], y_velocities[:][loop-1], timestep)
 
 #display simulation runtime data to terminal
@@ -107,16 +111,9 @@ end_time = time.time()
 runtime = end_time - start_time
 print(f'Simulation time: {timestep*num_steps} seconds')
 print(f'Runtime for {num_steps} iterations: {round(runtime, 4)} seconds')
-print(f'{round(num_steps/runtime, 2)} iterations per second')
 
 #plot orbits of bodies to screen
 plt.figure(figsize=(6, 6))
 for i in range(len(body_names)):
     plt.plot(x_positions[:, i], y_positions[:, i])
 plt.show()
-
-"""
-TODO:
-Give sun initial velocity to negate total momentum of the system
-function to randomise starting position of orbiting bodies 
-"""
