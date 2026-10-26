@@ -1,14 +1,33 @@
 import math
-import numpy as np
 import time
+import random
+import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+
+def initial_velocity(radius):
+    #returns initial velocity of planet at the start of simulaiton based only on orbital radius
+    #
+    for i in range(len(radius)):
+        if radius[i] == 0:
+            radius[i] = np.inf
+    velocity = math.sqrt(G * masses[0] / radius )
+    return velocity
+
+def body_initial_positions(radii):
+    #intake radius of planets orbit and return random x,y coords to start planet at
+    theta = np.random.uniform(0, 2*np.pi, size = len(radii))
+    random_x = radii * np.cos(theta)   
+    random_y = radii * np.sin(theta)
+
+    return random_x, random_y
 
 def acceleration(x_positions, y_positions) -> tuple:
     """ Function accepts x and y positions of all bodies at once and calculates the acceleration applied to all bodies simultaneously. 
     Returns updated acceleration for all bodies"""
     x_seperations = x_positions[None, :] - x_positions[:, None] #create 2D array where item[i][j] is the distance between j and i (xj - xi)
     y_seperations = y_positions[None, :] - y_positions[:, None] #same array but for y position
+    #"https://stackabuse.com/guide-to-numpy-matrix-subtraction/" info on how vector subreaction works to make difference matrix
     seperations = np.sqrt(x_seperations**2 + y_seperations**2) #calculate geometric seperation between bodies. works itemwise across both arrays
     """when i=j their seperation =0. this iwll lead to 0/0 error when calculating k. We want k=0 for this case. 
     To do this, we use fill_diagonal() to set seperation[i][i]=infinity to give 0/infinity which the computer will read as 0 giving k=0 """
@@ -56,20 +75,28 @@ timestep = 3600 #3600 seconds = 1 hour
 num_steps = 2 * (365 * 24) # gives just over 1 earth year simulation time
 
 #use arrays to store data for each body
-body_names = ["Sun", "Earth", "Mars"]
+body_names = np.array(["Sun", "Earth", "Mars"])
 masses = np.array([1.98892e30, 5.9742E24, 6.4169E23])
+initial_radii = np.array([0, 1.495978707e11, 2.27956E11])
 
-#create arrays of equal dimensions to store position and velocity data
-x_positions = np.zeros((num_steps,len(body_names)))
-y_positions = np.zeros((num_steps,len(body_names)))
-x_velocities = np.zeros((num_steps,len(body_names)))
-y_velocities = np.zeros((num_steps,len(body_names)))
+#create blank arrays of equal dimensions to store position and velocity data
+x_positions = np.zeros((num_steps,len(body_names))); y_positions = np.zeros((num_steps,len(body_names)))
+x_velocities = np.zeros((num_steps,len(body_names))); y_velocities = np.zeros((num_steps,len(body_names)))
+
 #initialise these arrays with starting positions of system
-x_positions[0] = np.array([0, 1*AU, 227.956E9])
-y_positions[0] = np.array([0, 0, 0])
-x_velocities[0] = np.array([0, 0, 0])
-y_velocities[0] = np.array([0, -1 * math.sqrt(G * M_SUN / AU ), -1 * math.sqrt(G * M_SUN / 227.956E9 )]) #could add function to start body at random angle to begin orbit
+x_positions[0], y_positions[0] = body_initial_positions(initial_radii)
 
+#initialise planet positions
+for i in range(1, len(body_names)):
+    ... #use functions to update bodies
+
+#initialise momentum of sun to give system zero net momentum
+for i in range(0, 1):
+    ... #in for loop so binary system can be considered
+
+x_velocities[0] = np.array([0, 0, 0])
+y_velocities[0] = np.array([0, -1 * math.sqrt(G * M_SUN / AU ), -1 * math.sqrt(G * M_SUN / 227.956E9 )]) 
+ 
 #main simulation loop
 start_time = time.time()
 for loop in tqdm(range(1, num_steps), ncols=100 ):
