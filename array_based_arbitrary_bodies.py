@@ -78,12 +78,13 @@ AU = 1.495978707e11
 G = 6.67e-11
 M_SUN = 1.98892e30
 timestep = 3600 #3600 seconds = 1 hour
-num_steps = 5 * (365 * 24)  #multiple of earth years
+num_steps = 10 * (365 * 24)  #multiple of earth years
 
 #use arrays to store data for each body
-body_names = np.array(["Sun","Mercury" ,"Earth", "Mars"])
-masses = np.array([1.98892e30, 3.301E23 , 5.9742E24, 6.4169E23])
-initial_radii = np.array([0, 0.387*AU , 1.495978707e11, 2.27956E11])
+#data taken from https://solarsystem.nasa.gov/planet-compare/ 
+body_names = np.array(["Sun", "Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune"])
+masses = np.array([1.98892e30, 3.30104E23 , 4.86732E24, 5.9742E24, 6.4169E23, 1.89813E27, 5.68319E26, 8.68103E25, 1.0241E26])
+initial_radii = np.array([0, 5.7909227E10 , 1.08209475E11, 1.495978707e11, 2.27956E11, 7.78340821E11, 1.426666422E12, 2.870658186E12, 4.498396441E12])
 
 #create blank arrays of equal dimensions to store position and velocity data
 x_positions = np.zeros((num_steps,len(body_names))); y_positions = np.zeros((num_steps,len(body_names)))
@@ -96,24 +97,30 @@ x_positions[0], y_positions[0] = body_initial_positions(initial_radii)
 #initialise velocities of all planets ensuring to set sun's velocity to 0
 x_velocities[0], y_velocities[0] = initial_velocity(x_positions[0], y_positions[0])
 
-#initialise momentum of sun to give system zero net momentum
+#initialise velocity of sun to give system zero net momentum
 x_velocities[0, 0] = -np.sum(masses[1:] * x_velocities[0, 1:]) / masses[0]
 y_velocities[0, 0] = -np.sum(masses[1:] * y_velocities[0, 1:]) / masses[0]
 
 
 #main simulation loop
 start_time = time.time()
-for loop in tqdm(range(1, num_steps), ncols=90 ):
+for loop in tqdm(range(1, num_steps), ncols=90, ascii=" ▖▘▝▗▚▞█", desc="Running Simulation", colour="#00bb82"):  #"░▒█" -- " ▖▘▝▗▚▞█"
     x_positions[loop], y_positions[loop], x_velocities[loop], y_velocities[loop] = body_update(x_positions[loop-1], y_positions[loop-1], x_velocities[loop-1], y_velocities[:][loop-1], timestep)
 
 #display simulation runtime data to terminal
 end_time = time.time()
 runtime = end_time - start_time
 print(f'Simulation time: {timestep*num_steps} seconds')
-print(f'Runtime for {num_steps} iterations: {round(runtime, 4)} seconds')
+print(f'Runtime for {num_steps} iterations: {round(runtime, 5)} seconds')
 
 #plot orbits of bodies to screen
 plt.figure(figsize=(6, 6))
 for i in range(len(body_names)):
     plt.plot(x_positions[:, i], y_positions[:, i])
 plt.show()
+
+
+"""
+TODO
+Implement axis crossing tracking
+"""
