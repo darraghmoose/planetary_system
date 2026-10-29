@@ -124,13 +124,11 @@ start_time = time.time()
 for loop in tqdm(range(1, num_steps), ncols=90, ascii=" ▖▘▝▗▚▞█", desc="Running Simulation", colour="#00bb82"):  #"░▒█" -- " ▖▘▝▗▚▞█"
     x_positions[loop], y_positions[loop], x_velocities[loop], y_velocities[loop] = body_update(x_positions[loop-1], y_positions[loop-1], x_velocities[loop-1], y_velocities[:][loop-1], timestep)
     #check for axis crossing
-    if y_positions[loop][1] * y_positions[loop-1][1] < 0 and x_positions[loop][1] > 0:
+    if (y_positions[loop][1] - y_positions[loop][0]) * (y_positions[loop-1][1]- y_positions[loop-1][0]) < 0 and x_positions[loop][1] > 0:
         #timestep at [loop] = loop * timesteps
         time_after = loop * timestep
         crossing_time = time_after - (y_positions[loop][1])*(timestep / (y_positions[loop][1] - y_positions[loop-1][1]))
         crossings.append(crossing_time)
-
-
 
 #display simulation runtime data to terminal
 end_time = time.time()
