@@ -51,7 +51,7 @@ def body_update(x_array, y_array, vx_array, vy_array, dt: float) -> tuple:
     """
 
     #calculate all a values
-    a_x_position , a_y_position = vx_array,  vy_array                   #abcd values will all be arrays 
+    a_x_position , a_y_position = vx_array,  vy_array             #abcd values will all be arrays 
     a_x_velocity, a_y_velocity = acceleration(x_array, y_array)   #updated velocity is an acceleration by definition of runge kutta method, that is reason function is named acceleration
 
     #calculate all b values
@@ -73,49 +73,67 @@ def body_update(x_array, y_array, vx_array, vy_array, dt: float) -> tuple:
     updated_y_velocities = vy_array + ((dt/6) * (a_y_velocity + 2*b_y_velocity + 2*c_y_velocity + d_y_velocity))
     return updated_x_positions, updated_y_positions, updated_x_velocities, updated_y_velocities
 
+def kinetic_energy(body_mass, body_x_velocity, body_y_velocity):
+    value = 0.5 * body_mass * (body_x_velocity**2 + body_y_velocity**2)
+    return value
+
 #constants
 AU = 1.495978707e11
 G = 6.67e-11
 M_SUN = 1.98892e30
-timestep = 3600 #3600 seconds = 1 hour
-num_steps = 30 * (365 * 24)  #multiple of earth years
 
-#use arrays to store data for each body
-#data taken from https://solarsystem.nasa.gov/planet-compare/ 
+#simulation runtime parameters
+timestep = 24 * 3600 #3600 seconds = 1 hour
+num_steps = 60 * (365 * 24)  
+
+#use arrays to store data for each body      -      data taken from https://solarsystem.nasa.gov/planet-compare/ 
 body_names = np.array(["Sun", "Jupiter", "Unstable Asteroid"])
 masses = np.array([1.98892e30, 1.89813E27, 0.95E21])
-initial_radii = np.array([0, 7.78340821E11, (2.5 * AU)])
+initial_radii = np.array([0, 5.2*AU, (3.276 * AU)])
 
 #create blank arrays of equal dimensions to store position and velocity data
 x_positions = np.zeros((num_steps,len(body_names))); y_positions = np.zeros((num_steps,len(body_names)))
 x_velocities = np.zeros((num_steps,len(body_names))); y_velocities = np.zeros((num_steps,len(body_names)))
 
-
-#initialise position of all bodies surrounding the sun
+#initialise position and velocity of all bodies surrounding the sun
 x_positions[0], y_positions[0] = body_initial_positions(initial_radii)
-
-#initialise velocities of all planets ensuring to set sun's velocity to 0
 x_velocities[0], y_velocities[0] = initial_velocity(x_positions[0], y_positions[0])
 
 #initialise velocity of sun to give system zero net momentum
 x_velocities[0, 0] = -np.sum(masses[1:] * x_velocities[0, 1:]) / masses[0]
 y_velocities[0, 0] = -np.sum(masses[1:] * y_velocities[0, 1:]) / masses[0]
 
+#tracking KE of asteroid
+energy_tracking = np.zeros((num_steps, 2))
+energy_tracking[0] = 0, kinetic_energy(masses[2], x_velocities[0][2], y_velocities[0][2])
 
 #main simulation loop
 start_time = time.time()
 for loop in tqdm(range(1, num_steps), ncols=90, ascii=" ▖▘▝▗▚▞█", desc="Running Simulation", colour="#00bb82"):  #"░▒█" -- " ▖▘▝▗▚▞█"
     x_positions[loop], y_positions[loop], x_velocities[loop], y_velocities[loop] = body_update(x_positions[loop-1], y_positions[loop-1], x_velocities[loop-1], y_velocities[:][loop-1], timestep)
+    #asteroid is set on initially circular orbit -> KE should remain constant
+    #every so many steps measure asteroids KE
+    #every step at first
+    energy_tracking[loop] = num_steps*timestep, kinetic_energy(masses[2], x_velocities[loop][2], y_velocities[loop][2])
 
 #display simulation runtime data to terminal
 end_time = time.time()
 runtime = end_time - start_time
-print(f'Simulation time: {timestep*num_steps} seconds')
-print(f'Runtime for {num_steps} iterations: {round(runtime, 5)} seconds')
+print(f'Simulation time: {timestep*num_steps} seconds = {np.round(timestep*num_steps/(31557600), 2)} years')
+print(f'Runtime for {num_steps} iterations: {round(runtime, 2)} seconds')
 
 #plot orbits of bodies to screen
-plt.figure(figsize=(6, 6))
+plt.figure(1, figsize=(6, 6))
 for i in range(len(body_names)):
     plt.plot(x_positions[:, i], y_positions[:, i])
-plt.show()
+plt.xlabel('X [m]')
+plt.ylabel('Y [m]')
 
+#create plot of asteroid KE
+plt.figure(2, figsize=(6, 6))
+plt.plot(energy_tracking[:, 1])
+plt.ylabel('Kinetic energy [Joules]')
+plt.xlabel('Time')
+
+#display plots
+plt.show()
