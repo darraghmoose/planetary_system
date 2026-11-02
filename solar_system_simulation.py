@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
-def body_initial_positions(radii):
+def initial_positions(radii):
     #intake radius of planets orbit and return random x,y coords to start planet at
     theta = np.random.uniform(0, 2*np.pi, size = len(radii))    #theta in radians
     random_x = radii * np.cos(theta)   
@@ -92,7 +92,7 @@ x_velocities = np.zeros((num_steps,len(body_names))); y_velocities = np.zeros((n
 
 
 #initialise position of all bodies surrounding the sun
-x_positions[0], y_positions[0] = body_initial_positions(initial_radii)
+x_positions[0], y_positions[0] = initial_positions(initial_radii)
 
 #initialise velocities of all planets ensuring to set sun's velocity to 0
 x_velocities[0], y_velocities[0] = initial_velocity(x_positions[0], y_positions[0])
@@ -122,5 +122,5 @@ plt.show()
 
 """
 TODO
-Implement axis crossing tracking
+Implement axis crossing tracking for all planets in Solar system
 """

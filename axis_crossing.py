@@ -82,8 +82,8 @@ def check_axis_crossing(previous_y_position, current_y_position):
 AU = 1.495978707e11
 G = 6.67e-11
 M_SUN = 1.98892e30
-timestep = 3600 #3600 seconds = 1 hour
-num_steps = 10 * (365 * 24)  #multiple of earth years
+timestep = 0.5*3600 #3600 seconds = 1 hour
+num_steps = 5 * (365 * 24)  #multiple of earth years
 
 #use arrays to store data for each body
 #data taken from https://solarsystem.nasa.gov/planet-compare/ 
@@ -121,7 +121,7 @@ crossings = []
 
 #main simulation loop
 start_time = time.time()
-for loop in tqdm(range(1, num_steps), ncols=90, ascii=" ▖▘▝▗▚▞█", desc="Running Simulation", colour="#00bb82"):  #"░▒█" -- " ▖▘▝▗▚▞█"
+for loop in tqdm(range(1, num_steps), ncols=90, ascii=" ░▒█", desc="Running Simulation", colour="#00bb82"):  #"░▒█" -- " ▖▘▝▗▚▞█"
     x_positions[loop], y_positions[loop], x_velocities[loop], y_velocities[loop] = body_update(x_positions[loop-1], y_positions[loop-1], x_velocities[loop-1], y_velocities[:][loop-1], timestep)
     #check for axis crossing
     if (y_positions[loop][1] - y_positions[loop][0]) * (y_positions[loop-1][1]- y_positions[loop-1][0]) < 0 and x_positions[loop][1] > 0:
@@ -137,11 +137,10 @@ print(f'Simulation time: {timestep*num_steps} seconds')
 print(f'Runtime for {num_steps} iterations: {round(runtime, 5)} seconds')
 
 #print crossing times
-print(f'Time between crossings:')
+print(f'\nAverage time between crossings:')
 for i in range(1, len(crossings)):
     orbital_period = np.diff(crossings)
-print(f'\t{orbital_period} seconds')
-
+print(f'{round(orbital_period.mean(), 2)} seconds')
 
 #plot orbits of bodies to screen
 plt.figure(figsize=(7, 7))
