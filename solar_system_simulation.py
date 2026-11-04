@@ -78,7 +78,7 @@ AU = 1.495978707e11
 G = 6.67e-11
 M_SUN = 1.98892e30
 timestep = 3600 #3600 seconds = 1 hour
-num_steps = 10 * (365 * 24)  #multiple of earth years
+num_steps = 30 * (365 * 24)  #multiple of earth years
 
 #use arrays to store data for each body
 #data taken from https://solarsystem.nasa.gov/planet-compare/ 

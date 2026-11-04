@@ -73,17 +73,12 @@ def body_update(x_array, y_array, vx_array, vy_array, dt: float) -> tuple:
     updated_y_velocities = vy_array + ((dt/6) * (a_y_velocity + 2*b_y_velocity + 2*c_y_velocity + d_y_velocity))
     return updated_x_positions, updated_y_positions, updated_x_velocities, updated_y_velocities
 
-def check_axis_crossing(previous_y_position, current_y_position):
-    #check y coordinate of body 
-    if previous_y_position * current_y_position < 0:
-        ...
-
 #constants
 AU = 1.495978707e11
 G = 6.67e-11
 M_SUN = 1.98892e30
-timestep = 0.5*3600 #3600 seconds = 1 hour
-num_steps = 5 * (365 * 24)  #multiple of earth years
+timestep = 3600 #3600 seconds = 1 hour
+num_steps = 3 * (365 * 24)  #multiple of earth years
 
 #use arrays to store data for each body
 #data taken from https://solarsystem.nasa.gov/planet-compare/ 
@@ -98,7 +93,6 @@ initial_radii = np.array([0, 5.7909227E10 , 1.08209475E11, 1.495978707e11, 2.279
 body_names = np.array(["Sun", "Body1"])
 masses = np.array([1.98892e30, 5.9742E24])
 initial_radii = np.array([0, 1.495978707e11])
-
 
 
 #create blank arrays of equal dimensions to store position and velocity data
@@ -117,18 +111,25 @@ x_velocities[0, 0] = -np.sum(masses[1:] * x_velocities[0, 1:]) / masses[0]
 y_velocities[0, 0] = -np.sum(masses[1:] * y_velocities[0, 1:]) / masses[0]
 
 #track crossing times
-crossings = []
+
 
 #main simulation loop
 start_time = time.time()
+crossings = [[] for i in range(len(body_names)-1)]
 for loop in tqdm(range(1, num_steps), ncols=90, ascii=" ░▒█", desc="Running Simulation", colour="#00bb82"):  #"░▒█" -- " ▖▘▝▗▚▞█"
     x_positions[loop], y_positions[loop], x_velocities[loop], y_velocities[loop] = body_update(x_positions[loop-1], y_positions[loop-1], x_velocities[loop-1], y_velocities[:][loop-1], timestep)
     #check for axis crossing
-    if (y_positions[loop][1] - y_positions[loop][0]) * (y_positions[loop-1][1]- y_positions[loop-1][0]) < 0 and x_positions[loop][1] > 0:
-        #timestep at [loop] = loop * timesteps
-        time_after = loop * timestep
-        crossing_time = time_after - (y_positions[loop][1])*(timestep / (y_positions[loop][1] - y_positions[loop-1][1]))
-        crossings.append(crossing_time)
+    for planet in range(1, len(body_names)):
+        y_coord_now = y_positions[loop][planet] - y_positions[loop][0]
+        y_coor_prev = y_positions[loop-1][planet] - y_positions[loop-1][0]
+        x_coord_now = x_positions[loop][planet] - x_positions[loop][0]
+
+        #look for sign change across axis 
+        if y_coor_prev * y_coord_now < 0 and x_coord_now > 0:
+            #timestep at [loop] = loop * timesteps
+            time_after = loop * timestep
+            crossing_time = time_after - (y_coord_now)*(timestep / (y_coord_now - y_coor_prev))
+            crossings[planet-1].append(crossing_time)
 
 #display simulation runtime data to terminal
 end_time = time.time()
@@ -136,11 +137,18 @@ runtime = end_time - start_time
 print(f'Simulation time: {timestep*num_steps} seconds')
 print(f'Runtime for {num_steps} iterations: {round(runtime, 5)} seconds')
 
-#print crossing times
+#print crossing information
 print(f'\nAverage time between crossings:')
-for i in range(1, len(crossings)):
-    orbital_period = np.diff(crossings)
-print(f'{round(orbital_period.mean(), 2)} seconds')
+for i in range(1, len(body_names)):
+    times = crossings[i-1]
+    if len(times) < 2: #body needs to pass x axis twice to measure period
+        print(f'{body_names[i]}: Not enough crossings to measure orbital period')
+        continue
+    orbital_period = np.diff(times).mean()
+    print(f'{body_names[i]}:')
+    print(f'Seconds \t{round((orbital_period), 2)}')
+    print(f'Hours\t\t{round((orbital_period/3600), 2)}')
+    print(f'Days\t\t{round((orbital_period/(3600 * 24)), 2)}')
 
 #plot orbits of bodies to screen
 plt.figure(figsize=(7, 7))

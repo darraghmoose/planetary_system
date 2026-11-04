@@ -105,7 +105,7 @@ y_velocities[0, 0] = -np.sum(masses[1:] * y_velocities[0, 1:]) / masses[0]
 #main simulation loop
 start_time = time.time()
 for loop in tqdm(range(1, num_steps), ncols=90, ascii=" ▖▘▝▗▚▞█", desc="Running Simulation", colour="#00bb82"):  #"░▒█" -- " ▖▘▝▗▚▞█"
-    x_positions[loop], y_positions[loop], x_velocities[loop], y_velocities[loop] = body_update(x_positions[loop-1], y_positions[loop-1], x_velocities[loop-1], y_velocities[:][loop-1], timestep)
+    x_positions[loop], y_positions[loop], x_velocities[loop], y_velocities[loop] = body_update(x_positions[loop-1], y_positions[loop-1], x_velocities[loop-1], y_velocities[loop-1], timestep)
 
 #display simulation runtime data to terminal
 end_time = time.time()
@@ -116,5 +116,6 @@ print(f'Runtime for {num_steps} iterations: {round(runtime, 5)} seconds')
 #plot orbits of bodies to screen
 plt.figure(figsize=(6, 6))
 for i in range(len(body_names)):
-    plt.plot(x_positions[:, i], y_positions[:, i])
+    plt.plot(x_positions[:, i], y_positions[:, i], label=body_names) #legend is not functional
+plt.axis('equal') #keeps square aspect ratio
 plt.show()
