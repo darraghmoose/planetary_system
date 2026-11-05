@@ -1,4 +1,3 @@
-import time
 import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
@@ -20,7 +19,7 @@ def initial_velocity(x_start: np.ndarray, y_start: np.ndarray):
     orbit_radius = np.sqrt(x_start**2 + y_start**2)
 
     for i in range(len(orbit_radius)):
-        if orbit_radius[i] == 0:
+        if orbit_radius[i] == 0: #ignore sun
             continue
         speed = np.sqrt(G * masses[0] / orbit_radius[i])
         initial_x_velocity[i] = speed * y_start[i] / orbit_radius[i]
@@ -73,54 +72,74 @@ def body_update(x_array, y_array, vx_array, vy_array, dt: float) -> tuple:
     updated_y_velocities = vy_array + ((dt/6) * (a_y_velocity + 2*b_y_velocity + 2*c_y_velocity + d_y_velocity))
     return updated_x_positions, updated_y_positions, updated_x_velocities, updated_y_velocities
 
-#constants
+#constants & settings
 AU = 1.495978707e11
 G = 6.67e-11
-M_SUN = 1.98892e30
-timestep = 3600 #3600 seconds = 1 hour
-num_steps = 30 * (365 * 24)  #multiple of earth years
-
-#use arrays to store data for each body
-#data taken from https://solarsystem.nasa.gov/planet-compare/ 
 body_names = np.array(["Sun", "Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune"])
 masses = np.array([1.98892e30, 3.30104E23 , 4.86732E24, 5.9742E24, 6.4169E23, 1.89813E27, 5.68319E26, 8.68103E25, 1.0241E26])
 initial_radii = np.array([0, 5.7909227E10 , 1.08209475E11, 1.495978707e11, 2.27956E11, 7.78340821E11, 1.426666422E12, 2.870658186E12, 4.498396441E12])
+plot_colours = ['#ef0000', '#8c8987', '#dfb18c', '#3c6690', '#ff6b4d', '#c98226', '#f8d280', '#5d8b8e', '#4e5a74']
 
-#create blank arrays of equal dimensions to store position and velocity data
-x_positions = np.zeros((num_steps,len(body_names))); y_positions = np.zeros((num_steps,len(body_names)))
-x_velocities = np.zeros((num_steps,len(body_names))); y_velocities = np.zeros((num_steps,len(body_names)))
+timestep = 12 * 3600 #3600 seconds = 1 hour
+num_steps = 6 * (365 * 24)
+
+def main():
+    #create blank arrays of equal dimensions to store position and velocity data
+    x_positions = np.zeros((num_steps,len(body_names))); y_positions = np.zeros((num_steps,len(body_names)))
+    x_velocities = np.zeros((num_steps,len(body_names))); y_velocities = np.zeros((num_steps,len(body_names)))
+
+    #initialise position  and velocities of all bodies surrounding the sun
+    x_positions[0], y_positions[0] = initial_positions(initial_radii)
+    x_velocities[0], y_velocities[0] = initial_velocity(x_positions[0], y_positions[0])
+
+    #initialise velocity of sun to give system zero net momentum
+    x_velocities[0, 0] = -np.sum(masses[1:] * x_velocities[0, 1:]) / masses[0]
+    y_velocities[0, 0] = -np.sum(masses[1:] * y_velocities[0, 1:]) / masses[0]
+
+    #main simulation loop
+    crossings = [[] for i in range(len(body_names)-1)]
+    for loop in tqdm(range(1, num_steps), ncols=90, ascii=" ░▒█", desc="Running Simulation", colour="#00bb82"):  #"░▒█" -- " ▖▘▝▗▚▞█"
+        x_positions[loop], y_positions[loop], x_velocities[loop], y_velocities[loop] = body_update(x_positions[loop-1], y_positions[loop-1], x_velocities[loop-1], y_velocities[loop-1], timestep)
+        #check for axis crossing
+        for planet in range(1, len(body_names)):
+            y_coord_now = y_positions[loop][planet] - y_positions[loop][0]
+            y_coor_prev = y_positions[loop-1][planet] - y_positions[loop-1][0]
+            x_coord_now = x_positions[loop][planet] - x_positions[loop][0]
+
+            #look for sign change across axis 
+            if y_coor_prev * y_coord_now < 0 and x_coord_now > 0:
+                #timestep at [loop] = loop * timesteps
+                time_after = loop * timestep
+                crossing_time = time_after - (y_coord_now)*(timestep / (y_coord_now - y_coor_prev))
+                crossings[planet-1].append(crossing_time)
 
 
-#initialise position of all bodies surrounding the sun
-x_positions[0], y_positions[0] = initial_positions(initial_radii)
+    #print period data in table
+    print(f'Orbital period results:\n')
+    print(f'{'Planet':<12}{'Seconds':>15}{'Hours':>15}{'Days':>15}')
+    print(f'---------------------------------------------------------')
+    for i in range(1, len(body_names)):
+        times = crossings[i-1]
+        if len(times) < 2: #body needs to pass x axis twice to measure period
+            print(f'{body_names[i]:<12}{'Insufficient crossings':>45}')
+            continue
+        orbital_period = np.diff(times).mean()
+        print(f'{body_names[i]:<12}{orbital_period:>15,.1f}{orbital_period/3600:>15,.2f}{orbital_period/(3600*24):>15,.2f}')
+    
 
-#initialise velocities of all planets ensuring to set sun's velocity to 0
-x_velocities[0], y_velocities[0] = initial_velocity(x_positions[0], y_positions[0])
+    #for very large simulations check if plotting is wanted
+    show_plot = 'y'
+    if num_steps > 500000:
+        show_plot = input('Create plot? [y/n]: ') 
+    
+    if show_plot == 'y':
+        #plot orbits of bodies to screen
+        plt.figure(figsize=(7, 7))
+        for i in range(len(body_names)):
+            plt.plot(x_positions[:, i], y_positions[:, i], label=body_names[i], color=plot_colours[i])
+        plt.legend()
+        plt.axis('equal')
+        plt.show()
 
-#initialise velocity of sun to give system zero net momentum
-x_velocities[0, 0] = -np.sum(masses[1:] * x_velocities[0, 1:]) / masses[0]
-y_velocities[0, 0] = -np.sum(masses[1:] * y_velocities[0, 1:]) / masses[0]
-
-
-#main simulation loop
-start_time = time.time()
-for loop in tqdm(range(1, num_steps), ncols=90, ascii=" ▖▘▝▗▚▞█", desc="Running Simulation", colour="#00bb82"):  #"░▒█" -- " ▖▘▝▗▚▞█"
-    x_positions[loop], y_positions[loop], x_velocities[loop], y_velocities[loop] = body_update(x_positions[loop-1], y_positions[loop-1], x_velocities[loop-1], y_velocities[:][loop-1], timestep)
-
-#display simulation runtime data to terminal
-end_time = time.time()
-runtime = end_time - start_time
-print(f'Simulation time: {timestep*num_steps} seconds')
-print(f'Runtime for {num_steps} iterations: {round(runtime, 5)} seconds')
-
-#plot orbits of bodies to screen
-plt.figure(figsize=(6, 6))
-for i in range(len(body_names)):
-    plt.plot(x_positions[:, i], y_positions[:, i])
-plt.show()
-
-
-"""
-TODO
-Implement axis crossing tracking for all planets in Solar system
-"""
+if __name__ == '__main__':
+    main()

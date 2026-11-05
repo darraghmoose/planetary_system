@@ -117,18 +117,18 @@ for loop in tqdm(range(1, num_steps), ncols=90, ascii=" ░▒█", desc="Runnin
             crossing_time = time_after - (y_coord_now)*(timestep / (y_coord_now - y_coor_prev))
             crossings[planet-1].append(crossing_time)
 
-#print crossing information
-print(f'\tOrbital Information:')
+#print period data in table
+print(f'Orbital period results:\n')
+print(f'{'Planet':<12}{'Seconds':>15}{'Hours':>15}{'Days':>15}')
+print(f'---------------------------------------------------------')
 for i in range(1, len(body_names)):
     times = crossings[i-1]
     if len(times) < 2: #body needs to pass x axis twice to measure period
-        print(f'{body_names[i]}: Not enough crossings to measure orbital period')
+        print(f'{body_names[i]:<12}{'Insufficient crossings':>45}')
         continue
     orbital_period = np.diff(times).mean()
-    print(f'\n\t{body_names[i]}:')
-    print(f'Seconds \t{round((orbital_period), 2)}')
-    print(f'Hours\t\t{round((orbital_period/3600), 2)}')
-    print(f'Days\t\t{round((orbital_period/(3600 * 24)), 2)}')
+    print(f'{body_names[i]:<12}{orbital_period:>15,.1f}{orbital_period/3600:>15,.2f}{orbital_period/(3600*24):>15,.2f}')
+    
 
 #plot orbits of bodies to screen
 plt.figure(figsize=(7, 7))
