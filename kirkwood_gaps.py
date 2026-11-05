@@ -1,4 +1,3 @@
-import time
 import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
@@ -83,13 +82,32 @@ G = 6.67e-11
 M_SUN = 1.98892e30
 
 #simulation runtime parameters
-timestep = 24 * 3600 #3600 seconds = 1 hour
-num_steps = 5 * (365 * 24)  
+timestep = 24 * 3600        #seconds per timestep
+num_steps = 4 * (365 * 24)  #iterations per simulaiton
 
 #use arrays to store data for each body      -      data taken from https://solarsystem.nasa.gov/planet-compare/ 
-body_names = np.array(["Sun", "Jupiter", "Unstable Asteroid 1", "Unstable Asteroid 2", "Asteroid Belt"])
+"""
+body_names = np.array(["Sun", "Jupiter", "5:1 Resonance", "4:1 Resonance", "3:1 Resonance", "Asteroid Belt"])
+masses = np.array([1.98892e30, 1.89813E27, 0.95E21, 0.95E21, 95E21, 95E21])
+initial_radii = np.array([0, 5.204*AU, 1.780*AU, 2.065*AU, 2.502*AU, 2.8*AU])
+
+body_names = np.array(["Sun", "Jupiter", "Unstable 1", "Unstable 2", "Asteroid Belt"])
 masses = np.array([1.98892e30, 1.89813E27, 0.95E21, 0.95E21, 95E21])
-initial_radii = np.array([0, 5.2*AU, (3.276 * AU), (4 * AU), 2.8*AU])
+initial_radii = np.array([0, 5.2*AU, (3.28 * AU), (4 * AU), 2.8*AU])       #initial_radii = np.array([0, 5.2*AU, (3.276 * AU), (4 * AU), 2.8*AU])
+
+
+body_names = np.array(["Sun", "Jupiter", "Launched"])
+masses = np.array([1.98892e30, 1.89813E27, 0.95E21])
+initial_radii = np.array([0, 5.2*AU, 4.5*AU])
+"""
+
+#Gravity assist
+body_names = np.array(["Sun", "Jupiter", "Asteroid 1", "Asteroid 2", "Asteroid 3", "Asteroid 4", "Asteroid 5"])
+masses = np.array([1.98892e30, 1.89813E27, 0.95E21, 0.95E21, 95E21, 95E21, 95E21])
+initial_radii = np.array([0, 5.2*AU, 3.96* AU, 3.98* AU, 4.00 * AU, 4.02*AU, 4.04*AU])  
+
+
+plot_colours = ['#ef0000', '#c98226', '#8c8987', '#dfb18c', '#3c6690', '#ff6b4d', '#f8d280', '#5d8b8e', '#4e5a74']
 
 #create blank arrays of equal dimensions to store position and velocity data
 x_positions = np.zeros((num_steps,len(body_names))); y_positions = np.zeros((num_steps,len(body_names)))
@@ -103,38 +121,73 @@ x_velocities[0], y_velocities[0] = initial_velocity(x_positions[0], y_positions[
 x_velocities[0, 0] = -np.sum(masses[1:] * x_velocities[0, 1:]) / masses[0]
 y_velocities[0, 0] = -np.sum(masses[1:] * y_velocities[0, 1:]) / masses[0]
 
-#tracking KE of asteroid
+#track KE of asteroids
 asteroid_energy = np.zeros((num_steps, len(body_names)-2))
-asteroid_energy[0] = kinetic_energy(masses[2], x_velocities[0][2], y_velocities[0][2]), kinetic_energy(masses[3], x_velocities[0][3], y_velocities[0][3]), kinetic_energy(masses[4], x_velocities[0][4], y_velocities[0][4])
+asteroid_energy[0] = kinetic_energy(masses[2:], x_velocities[0][2:], y_velocities[0][2:])
 
 #main simulation loop
-start_time = time.time()
+crossings = [[] for i in range(len(body_names)-1)]
 for loop in tqdm(range(1, num_steps), ncols=90, ascii=" ░▒█", desc="Asteroid Simulation", colour="#00bb82"):  #" ░▒█" -- " ▖▘▝▗▚▞█"
     x_positions[loop], y_positions[loop], x_velocities[loop], y_velocities[loop] = body_update(x_positions[loop-1], y_positions[loop-1], x_velocities[loop-1], y_velocities[:][loop-1], timestep)
     #Measure astroid KE to gague orbit stability
     asteroid_energy[loop] = kinetic_energy(masses[2:len(masses)], x_velocities[loop][2:len(masses)], y_velocities[loop][2:len(masses)])
 
-#display simulation runtime data to terminal
-end_time = time.time()
-runtime = end_time - start_time
-print(f'Simulation time: {timestep*num_steps} seconds = {np.round(timestep*num_steps/(31557600), 1)} years')
-print(f'Runtime for {num_steps} iterations: {round(runtime, 2)} seconds')
+    #check for axis crossing
+    for planet in range(1, len(body_names)):
+        y_coord_now = y_positions[loop][planet] - y_positions[loop][0]
+        y_coor_prev = y_positions[loop-1][planet] - y_positions[loop-1][0]
+        x_coord_now = x_positions[loop][planet] - x_positions[loop][0]
+
+        #look for sign change across axis 
+        if y_coor_prev * y_coord_now < 0 and x_coord_now > 0:
+            #timestep at [loop] = loop * timesteps
+            time_after = loop * timestep
+            crossing_time = time_after - (y_coord_now)*(timestep / (y_coord_now - y_coor_prev))
+            crossings[planet-1].append(crossing_time)
+
+
+#print period data in table
+
+normalised_energy = asteroid_energy/asteroid_energy[0]
+deviation = np.max(normalised_energy, axis=0)# - np.min(normalised_energy, axis=0) 
+print(deviation)
+
+print(f'Orbital period results:\n')
+print(f'{'Planet':<15}{'Seconds':>15}{'Hours':>15}{'Days':>15}{'Resonance':>15}{'Deviation (%)':>15}')
+print(f'------------------------------------------------------------------------------------')
+for i in range(1, len(body_names)):
+    times = crossings[i-1]
+    if len(times) < 2: #body needs to pass x axis twice to measure period
+        print(f'{body_names[i]:<18}{'Insufficient crossings':>75}')
+        continue
+    orbital_period = np.diff(times).mean()
+    if i == 1:
+        jupiter_period = orbital_period
+        print(f'{body_names[i]:<15}{orbital_period:>15,.1f}{orbital_period/3600:>15,.2f}{orbital_period/(3600*24):>15,.2f}{jupiter_period/orbital_period:>15,.3f}{'NA':>15}')
+    else:
+        print(f'{body_names[i]:<15}{orbital_period:>15,.1f}{orbital_period/3600:>15,.2f}{orbital_period/(3600*24):>15,.2f}{jupiter_period/orbital_period:>15,.3f}{abs(1-deviation[i-2])*100:15,.1f}')
 
 #plot orbits of bodies to screen
 plt.figure(1, figsize=(6, 6))
 for i in range(len(body_names)):
-    plt.plot(x_positions[:, i], y_positions[:, i])
+    plt.plot(x_positions[:, i], y_positions[:, i], color=plot_colours[i], label=body_names[i])
 plt.xlabel('X [m]')
 plt.ylabel('Y [m]')
+plt.legend()
 
 #create normalised plot of asteroid energy
-normalised_energy = asteroid_energy/asteroid_energy[0]
 plt.figure(2, figsize=(6, 6))
 plt.title("Normalised Asteroid Stability")
 for asteroid in range(len(normalised_energy[0])):
-    plt.plot(np.linspace(0, timestep*num_steps, num=num_steps), normalised_energy[:, asteroid]) 
+    plt.plot(np.linspace(0, timestep*num_steps, num=num_steps), normalised_energy[:, asteroid], color=plot_colours[asteroid+2], label=body_names[asteroid+2]) 
 plt.ylabel('Normalised Kinetic Energy')
 plt.xlabel('Time')
+plt.legend()
 
 #display plots
 plt.show()
+"""
+TODO
+Rewrite kirkwood gaps programme to iterate through individual astroidsto avoid nearby asteroid affecting each other
+This can be used to determine radii and resonance periods for these orbits
+"""

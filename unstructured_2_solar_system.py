@@ -81,65 +81,61 @@ initial_radii = np.array([0, 5.7909227E10 , 1.08209475E11, 1.495978707e11, 2.279
 plot_colours = ['#ef0000', '#8c8987', '#dfb18c', '#3c6690', '#ff6b4d', '#c98226', '#f8d280', '#5d8b8e', '#4e5a74']
 
 timestep = 12 * 3600 #3600 seconds = 1 hour
-num_steps = 6 * (365 * 24)
+num_steps = 10 * (365 * 24)
 
-def main():
-    #create blank arrays of equal dimensions to store position and velocity data
-    x_positions = np.zeros((num_steps,len(body_names))); y_positions = np.zeros((num_steps,len(body_names)))
-    x_velocities = np.zeros((num_steps,len(body_names))); y_velocities = np.zeros((num_steps,len(body_names)))
+#create blank arrays of equal dimensions to store position and velocity data
+x_positions = np.zeros((num_steps,len(body_names))); y_positions = np.zeros((num_steps,len(body_names)))
+x_velocities = np.zeros((num_steps,len(body_names))); y_velocities = np.zeros((num_steps,len(body_names)))
 
-    #initialise position  and velocities of all bodies surrounding the sun
-    x_positions[0], y_positions[0] = initial_positions(initial_radii)
-    x_velocities[0], y_velocities[0] = initial_velocity(x_positions[0], y_positions[0])
+#initialise position  and velocities of all bodies surrounding the sun
+x_positions[0], y_positions[0] = initial_positions(initial_radii)
+x_velocities[0], y_velocities[0] = initial_velocity(x_positions[0], y_positions[0])
 
-    #initialise velocity of sun to give system zero net momentum
-    x_velocities[0, 0] = -np.sum(masses[1:] * x_velocities[0, 1:]) / masses[0]
-    y_velocities[0, 0] = -np.sum(masses[1:] * y_velocities[0, 1:]) / masses[0]
+#initialise velocity of sun to give system zero net momentum
+x_velocities[0, 0] = -np.sum(masses[1:] * x_velocities[0, 1:]) / masses[0]
+y_velocities[0, 0] = -np.sum(masses[1:] * y_velocities[0, 1:]) / masses[0]
 
-    #main simulation loop
-    crossings = [[] for i in range(len(body_names)-1)]
-    for loop in tqdm(range(1, num_steps), ncols=90, ascii=" ░▒█", desc="Running Simulation", colour="#00bb82"):  #"░▒█" -- " ▖▘▝▗▚▞█"
-        x_positions[loop], y_positions[loop], x_velocities[loop], y_velocities[loop] = body_update(x_positions[loop-1], y_positions[loop-1], x_velocities[loop-1], y_velocities[loop-1], timestep)
-        #check for axis crossing
-        for planet in range(1, len(body_names)):
-            y_coord_now = y_positions[loop][planet] - y_positions[loop][0]
-            y_coor_prev = y_positions[loop-1][planet] - y_positions[loop-1][0]
-            x_coord_now = x_positions[loop][planet] - x_positions[loop][0]
+#main simulation loop
+crossings = [[] for i in range(len(body_names)-1)]
+for loop in tqdm(range(1, num_steps), ncols=90, ascii=" ░▒█", desc="Running Simulation", colour="#00bb82"):  #"░▒█" -- " ▖▘▝▗▚▞█"
+    x_positions[loop], y_positions[loop], x_velocities[loop], y_velocities[loop] = body_update(x_positions[loop-1], y_positions[loop-1], x_velocities[loop-1], y_velocities[loop-1], timestep)
+    #check for axis crossing
+    for planet in range(1, len(body_names)):
+        y_coord_now = y_positions[loop][planet] - y_positions[loop][0]
+        y_coor_prev = y_positions[loop-1][planet] - y_positions[loop-1][0]
+        x_coord_now = x_positions[loop][planet] - x_positions[loop][0]
 
-            #look for sign change across axis 
-            if y_coor_prev * y_coord_now < 0 and x_coord_now > 0:
-                #timestep at [loop] = loop * timesteps
-                time_after = loop * timestep
-                crossing_time = time_after - (y_coord_now)*(timestep / (y_coord_now - y_coor_prev))
-                crossings[planet-1].append(crossing_time)
+        #look for sign change across axis 
+        if y_coor_prev * y_coord_now < 0 and x_coord_now > 0:
+            #timestep at [loop] = loop * timesteps
+            time_after = loop * timestep
+            crossing_time = time_after - (y_coord_now)*(timestep / (y_coord_now - y_coor_prev))
+            crossings[planet-1].append(crossing_time)
 
 
-    #print period data in table
-    print(f'Orbital period results:\n')
-    print(f'{'Planet':<12}{'Seconds':>15}{'Hours':>15}{'Days':>15}')
-    print(f'---------------------------------------------------------')
-    for i in range(1, len(body_names)):
-        times = crossings[i-1]
-        if len(times) < 2: #body needs to pass x axis twice to measure period
-            print(f'{body_names[i]:<12}{'Insufficient crossings':>45}')
-            continue
-        orbital_period = np.diff(times).mean()
-        print(f'{body_names[i]:<12}{orbital_period:>15,.1f}{orbital_period/3600:>15,.2f}{orbital_period/(3600*24):>15,.2f}')
-    
+#print period data in table
+print(f'Orbital period results:\n')
+print(f'{'Planet':<12}{'Seconds':>15}{'Hours':>15}{'Days':>15}')
+print(f'---------------------------------------------------------')
+for i in range(1, len(body_names)):
+    times = crossings[i-1]
+    if len(times) < 2: #body needs to pass x axis twice to measure period
+        print(f'{body_names[i]:<12}{'Insufficient crossings':>45}')
+        continue
+    orbital_period = np.diff(times).mean()
+    print(f'{body_names[i]:<12}{orbital_period:>15,.1f}{orbital_period/3600:>15,.2f}{orbital_period/(3600*24):>15,.2f}')
 
-    #for very large simulations check if plotting is wanted
-    show_plot = 'y'
-    if num_steps > 500000:
-        show_plot = input('Create plot? [y/n]: ') 
-    
-    if show_plot == 'y':
-        #plot orbits of bodies to screen
-        plt.figure(figsize=(7, 7))
-        for i in range(len(body_names)):
-            plt.plot(x_positions[:, i], y_positions[:, i], label=body_names[i], color=plot_colours[i])
-        plt.legend()
-        plt.axis('equal')
-        plt.show()
 
-if __name__ == '__main__':
-    main()
+#for very large simulations check if plotting is wanted
+show_plot = 'y'
+if num_steps > 500000:
+    show_plot = input('Create plot? [y/n]: ') 
+
+if show_plot == 'y':
+    #plot orbits of bodies to screen
+    plt.figure(figsize=(7, 7))
+    for i in range(len(body_names)):
+        plt.plot(x_positions[:, i], y_positions[:, i], label=body_names[i], color=plot_colours[i])
+    plt.legend()
+    plt.axis('equal')
+    plt.show()
