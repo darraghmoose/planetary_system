@@ -107,14 +107,14 @@ for loop in tqdm(range(1, num_steps), ncols=90, ascii=" ░▒█", desc="Runnin
     #check for axis crossing
     for planet in range(1, len(body_names)):
         y_coord_now = y_positions[loop][planet] - y_positions[loop][0]
-        y_coor_prev = y_positions[loop-1][planet] - y_positions[loop-1][0]
+        y_coord_prev = y_positions[loop-1][planet] - y_positions[loop-1][0]
         x_coord_now = x_positions[loop][planet] - x_positions[loop][0]
 
         #look for sign change across axis 
-        if y_coor_prev * y_coord_now < 0 and x_coord_now > 0:
+        if y_coord_prev * y_coord_now < 0 and x_coord_now > 0:
             #timestep at [loop] = loop * timesteps
             time_after = loop * timestep
-            crossing_time = time_after - (y_coord_now)*(timestep / (y_coord_now - y_coor_prev))
+            crossing_time = time_after - (y_coord_now)*(timestep / (y_coord_now - y_coord_prev))
             crossings[planet-1].append(crossing_time)
 
 #print period data in table

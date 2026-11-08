@@ -26,16 +26,16 @@ body_names = np.array(["Sun", "Jupiter", "Unstable 1", "Unstable 2", "Asteroid B
 masses = np.array([1.98892e30, 1.89813E27, 0.95E21, 0.95E21, 95E21])
 initial_radii = np.array([0, 5.2*AU, (3.28 * AU), (4 * AU), 2.8*AU])       #initial_radii = np.array([0, 5.2*AU, (3.276 * AU), (4 * AU), 2.8*AU])
 
-
-body_names = np.array(["Sun", "Jupiter", "Launched"])
-masses = np.array([1.98892e30, 1.89813E27, 0.95E21])
-initial_radii = np.array([0, 5.2*AU, 4.5*AU])
-"""
-
 #Gravity assist
 body_names = np.array(["Sun", "Jupiter", "Asteroid"])
 masses = np.array([1.98892e30, 1.89813E27, 0.95E21])
 initial_radii = np.array([0, 5.2*AU, 5.00* AU])  
+"""
+
+body_names = np.array(["Sun", "Jupiter", "Launched"])
+masses = np.array([1.98892e30, 1.89813E27, 0.95E21])
+initial_radii = np.array([0, 5.2*AU, 0.20*AU])
+
 
 #create blank arrays of equal dimensions to store position and velocity data
 x_positions = np.zeros((num_steps,len(body_names))); y_positions = np.zeros((num_steps,len(body_names)))

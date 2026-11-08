@@ -1,19 +1,31 @@
 \documentclass[11pt, a4paper, onecolumn]{article}
 
 %install packages as needed here
-%\usepackage{geometry}  %useful for changing page layout
-%\geometry{top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm}
-
-% \title{\textbf{Astrophysical simulation of N-Bodies}
-% \author{\textbf{Darragh Morrissey}$^{1}$ \\
-%        \small $^{1}$Queen's University, Belfast \\}}
-% \date{\today}
+\usepackage{siunitx}
+\usepackage{graphicx}
+\usepackage{listings} %This package and the below package allows us to enter python code to the latex file
+\usepackage{xcolor}   %These settings were all stolen from the internet as good ones for python
+\lstset{
+    language=Python,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue},
+    commentstyle=\color{gray}\itshape,
+    stringstyle=\color{red},
+    numbers=left,
+    breaklines=true,
+    frame=single,
+    showstringspaces=false,
+    morekeywords={self}
+}
+% \usepackage{geometry}  %useful for changing page layout
+% \geometry{top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm}
 
 \title{Simulation of the Motion of Astronomical Bodies}
 \author{Darragh Morrissey - 40451054}
+\date{\today}
+
 
 \begin{document}
-
 \maketitle
 Here's the outline for the report regarding the layout and process. 
 \begin{itemize}
@@ -23,22 +35,57 @@ Here's the outline for the report regarding the layout and process.
         \item Structured(2) - Track period of Earth's orbit
         \item Structured(3) - Track period of new planet based off student id number
     \end{itemize}
-    \item Allow Sun to move due to pull of Earth
-    \item Extend simulation to include all planets of the Solar System
-    \item Allow planets of Solar System to move clockwise and counterclockwise to view how stability is affected
-    \item Add asteroids to simulation to examine bahviour of kirkwood gaps 
+    \item Structured work:
+    \begin{itemize}
+        \item Allow Sun to move due to pull of Earth
+        \item Extend simulation to include all planets of the Solar System
+        \item Allow planets of Solar System to move clockwise and counter-clockwise to view how stability is affected
+        \item Add asteroids to simulation to examine behaviour of Kirkwood gaps 
+    \end{itemize}
 \end{itemize}
 
 \section{Abstract}
+"An abstract that summarizes your project and the key results/conclusions"
+
 
 Using python, a simulation of the bodies of the Solar System was created  
+\section{Usage of AI}
+
+
 
 \section{Introduction}
-The aims of this project was to accurately model the behaviour of astronomical bodies in the Solar System and to examine the nature of Kirkwood gaps using python. 
+The motion of celestial bodies in the Solar System is primarily determined by the force of gravitational attraction between all the planets.
+This report aims to 
+
 It was assumed that all motion will take place on the x-y plane 
 
 
 \section{Methods}
+The first script written aimed to simulate the motion of the Earth in orbit around the Sun. 
+Since the mass of the Sun is much larger than that of the Earth ($\frac{M_{Sun}}{M_{Earth}}\approx\num{3.3e5}$), it was assumed that the affect of Earth's pull 
+on the Sun was negligible and the Sun would remain at rest during the simulation. 
+
+The Sun was fixed at (0,0) and the Earth was placed 1 AU away from the Sun at a random angle to the horizontal axis.
+The Runge-Kutta method was used to numerically calculate the updated position and velocity of the Earth after each timestep. 
+The simulation was run for 3 years at a timestep of 1 hour and the position of the Earth was plotted using matplotlib to give Figure~\ref{fig:structured1}. 
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/structured1.pdf}
+    \caption{Structured 1 plot}
+    \label{fig:structured1}
+\end{figure}
+
+Visually this behaviour seems accurate as we see the Earth travelling in a steady circular orbit. 
+To measure the accuracy of the simulation it was decided that the period of Earth's orbit should be measured. 
+This was achieved by measuring time between successive crossings of the positive X-axis.  
+To determine whether an axis crossing had occurred, the programme used the following check:
+\begin{lstlisting}[language=Python]
+    if y_coord_prev * y_coord_now < 0 and x_coord_now > 0:
+\end{lstlisting}
+where \texttt{y\_coord\_now} was the most recent $y$ coordinate of the Earth and \texttt{y\_coord\_prev} was the $y$ coordinate immediately before this. 
+
+
+
 Usage of Runge Kutta method
 
 Sun and Earth model with stationary Sun
@@ -49,26 +96,31 @@ Sun and Earth model with Sun able to move
 
 Sun and arbitrary body model where initial velocity is given to body but not Sun. 
 
-Give Sun initial momemtum to give system 0 total momentum
+Give Sun initial momentum to give system 0 total momentum
 
 Add rest of bodies from Solar System into simulation
 
 Examine Kirkwood gaps by only considering Sun, Jupiter and asteroids at various starting orbits
 
 \section{Results}
+"Your results"
 
-
-
+"Discussion of results and conclusions"
 
 
 \section{Conclusion}
-
+Inaccuracies in this simulation may originate from a few sources, such as
+\begin{itemize}
+    \item Circular orbits vs. elliptical orbits
+    \item No orbital inclination
+    \item Choice of simulation timestep
+\end{itemize}
 
 
 
 
 \section{Appendix}
-
+"An appendix with a printout of your Python program(s)"
 
 
 
