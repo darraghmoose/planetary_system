@@ -37,10 +37,12 @@ for loop in tqdm(range(1, num_steps), ncols=90, ascii=" ░▒█", desc="Runnin
 plt.figure(figsize=(6, 6))
 for i in range(len(body_names)):
     if i == 0: #need to use marker for sun as it never moves
-        plt.plot(x_positions[0, i], y_positions[0, i], 'o', color=plot_colours[i], markersize=8, label=body_names[i]) #[0, i] used to avoid drawing same point over and over
+        plt.plot(x_positions[0, i]/AU, y_positions[0, i]/AU, 'o', color=plot_colours[i], markersize=8, label=body_names[i]) #[0, i] used to avoid drawing same point over and over
     else:
-        plt.plot(x_positions[:, i], y_positions[:, i], color=plot_colours[i], label=body_names[i])
+        plt.plot(x_positions[:, i]/AU, y_positions[:, i]/AU, color=plot_colours[i], label=body_names[i])
 plt.axis('equal')
+plt.xlabel('X (AU)')
+plt.ylabel('Y (AU)')
 plt.legend()
 plt.savefig("images/structured1.pdf")
 plt.show()

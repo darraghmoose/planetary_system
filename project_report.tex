@@ -17,8 +17,12 @@
     showstringspaces=false,
     morekeywords={self}
 }
-% \usepackage{geometry}  %useful for changing page layout
-% \geometry{top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm}
+\usepackage{geometry}  %useful for changing page layout
+\geometry{top=3cm, bottom=3cm, left=3cm, right=3cm}
+%example of referencing code if needed
+% \begin{lstlisting}[language=Python]
+%     if y_coord_prev * y_coord_now < 0 and x_coord_now > 0:
+% \end{lstlisting}
 
 \title{Simulation of the Motion of Astronomical Bodies}
 \author{Darragh Morrissey - 40451054}
@@ -27,80 +31,68 @@
 
 \begin{document}
 \maketitle
-Here's the outline for the report regarding the layout and process. 
-\begin{itemize}
-    \item Structured work:
-    \begin{itemize}
-        \item Structured(1) - Stationary Sun and moving Earth
-        \item Structured(2) - Track period of Earth's orbit
-        \item Structured(3) - Track period of new planet based off student id number
-    \end{itemize}
-    \item Structured work:
-    \begin{itemize}
-        \item Allow Sun to move due to pull of Earth
-        \item Extend simulation to include all planets of the Solar System
-        \item Allow planets of Solar System to move clockwise and counter-clockwise to view how stability is affected
-        \item Add asteroids to simulation to examine behaviour of Kirkwood gaps 
-    \end{itemize}
-\end{itemize}
 
 \section{Abstract}
-"An abstract that summarizes your project and the key results/conclusions"
 
-
-Using python, a simulation of the bodies of the Solar System was created  
-\section{Usage of AI}
-
-
+\section{Use of AI}
 
 \section{Introduction}
-The motion of celestial bodies in the Solar System is primarily determined by the force of gravitational attraction between all the planets.
-This report aims to 
-
-It was assumed that all motion will take place on the x-y plane 
-
 
 \section{Methods}
+\subsection{Structured Work}
+%Unstructured 1 - Earth moving around Sun
 The first script written aimed to simulate the motion of the Earth in orbit around the Sun. 
 Since the mass of the Sun is much larger than that of the Earth ($\frac{M_{Sun}}{M_{Earth}}\approx\num{3.3e5}$), it was assumed that the affect of Earth's pull 
 on the Sun was negligible and the Sun would remain at rest during the simulation. 
 
-The Sun was fixed at (0,0) and the Earth was placed 1 AU away from the Sun at a random angle to the horizontal axis.
+The Sun was fixed at (0,0) and the Earth was placed 1 AU, where 1 AU = $\num{1.495978707e11}$m, away from the Sun at a random angle with respect to the horizontal axis.
 The Runge-Kutta method was used to numerically calculate the updated position and velocity of the Earth after each timestep. 
 The simulation was run for 3 years at a timestep of 1 hour and the position of the Earth was plotted using matplotlib to give Figure~\ref{fig:structured1}. 
-\begin{figure}[!htbp]
+\begin{figure}[hbt!]
     \centering
     \includegraphics[width=0.8\textwidth]{images/structured1.pdf}
-    \caption{Structured 1 plot}
+    \caption{Structured 1 plot (rename)}
     \label{fig:structured1}
 \end{figure}
 
-Visually this behaviour seems accurate as we see the Earth travelling in a steady circular orbit. 
+%Structured 2 - Measuring Earth's Period
+Visually this behaviour seems accurate as the Earth is seen travelling in a steady circular orbit. 
 To measure the accuracy of the simulation it was decided that the period of Earth's orbit should be measured. 
 This was achieved by measuring time between successive crossings of the positive X-axis.  
-To determine whether an axis crossing had occurred, the programme used the following check:
-\begin{lstlisting}[language=Python]
-    if y_coord_prev * y_coord_now < 0 and x_coord_now > 0:
-\end{lstlisting}
-where \texttt{y\_coord\_now} was the most recent $y$ coordinate of the Earth and \texttt{y\_coord\_prev} was the $y$ coordinate immediately before this. 
+
+To determine when the Earth actually crossed the x-axis, the product of its current and previous y-coordinates was calculated. 
+If this value was negative and the current x-coordinate was positive then the Earth must have crossed the x-axis in the previous timestep.
+To more accurately determine the moment the Earth crossed the x-axis, a linear interpolation method was used, which gives the crossing time as 
+\begin{equation}
+    t=t_1-\frac{y_1}{y_1-y_0}dt
+\end{equation}
+where $t_1$ was the time after crossing the x-axis, $y_0$ and $y_1$ were the y-coordinates of the Earth before and after the crossing and dt is the timestep used. 
+This method was selected as when considering the Earth's motion over 1 timestep (1 hour) the Earth's orbit looks approximately linear. 
+This modification was made to the code and the script was run for 3 calendar years (3 x 365 days) with a timestep of 1 hour.
+This gave Earth's orbital period as 365.33 days. 
+
+%Structured 3 - Simulation of body based on student number
+This programme was tested on a new body, which we will call BLANK, whose initial radius in AU was given by the formula:
+\begin{equation}
+    r=0.4+\frac{1054}{25000} AU=0.44216 AU
+\end{equation} 
+where the digits 1054 were determined from the author's student number. 
+The mass of this body was assumed to be equal to the Earth's but this assumption should have no effect on the simulation. 
+This is because the acceleration imparted on the Earth is independent of the Earth's mass, it only depends on the mass of the Sun. 
+Running the same programme on BLANK we see it also follows a circular orbit around the Sun shown in Figure~\ref{fig:structured3}, but with a much shorter period of 107.41 days. 
+\begin{figure}[hbt!]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/structured3.pdf}
+    \caption{Structured 2 plot (rename)}
+    \label{fig:structured3}
+\end{figure}
 
 
 
-Usage of Runge Kutta method
+\subsection{Unstructured Work}
 
-Sun and Earth model with stationary Sun
 
-Orbital time tracker
 
-Sun and Earth model with Sun able to move
-
-Sun and arbitrary body model where initial velocity is given to body but not Sun. 
-
-Give Sun initial momentum to give system 0 total momentum
-
-Add rest of bodies from Solar System into simulation
-
-Examine Kirkwood gaps by only considering Sun, Jupiter and asteroids at various starting orbits
 
 \section{Results}
 "Your results"
@@ -118,10 +110,25 @@ Inaccuracies in this simulation may originate from a few sources, such as
 
 
 
-
 \section{Appendix}
 "An appendix with a printout of your Python program(s)"
 
+\section{layout}
+\begin{itemize}
+    \item Structured work:
+    \begin{itemize}
+        \item Structured(1) - Stationary Sun and moving Earth
+        \item Structured(2) - Track period of Earth's orbit
+        \item Structured(3) - Track period of new planet based off student id number
+    \end{itemize}
+    \item Structured work:
+    \begin{itemize}
+        \item Allow Sun to move due to pull of Earth
+        \item Extend simulation to include all planets of the Solar System
+        \item Allow planets of Solar System to move clockwise and counter-clockwise to view how stability is affected
+        \item Add asteroids to simulation to examine behaviour of Kirkwood gaps 
+    \end{itemize}
+\end{itemize}
 
 
 

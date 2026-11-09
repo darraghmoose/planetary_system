@@ -77,8 +77,8 @@ def asteroid_stability_simulation(target_radii):
 #simulation parameters
 timestep = 24 * 3600        #seconds per timestep
 num_steps = 2 * (365 * 24)  #iterations per simulaiton
-start_radius = 0.2 *AU
-end_radius = 0.4 * AU
+start_radius = 0.1 *AU
+end_radius = 0.3 * AU
 num_asteroids = 21
 target_radii = np.linspace(start_radius, end_radius, num_asteroids) #if want to simulate only certain radii, replace target_radii with list of desired radii
 

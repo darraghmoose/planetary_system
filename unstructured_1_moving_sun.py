@@ -62,6 +62,20 @@ for i in range(1, len(body_names)):
 #plot orbits of bodies to screen
 plt.figure(figsize=(7, 7))
 for i in range(len(body_names)):
-    plt.plot(x_positions[:, i], y_positions[:, i], label=body_names[i], color=plot_colours[i])
+    plt.plot(x_positions[:, i]/AU, y_positions[:, i]/AU, label=body_names[i], color=plot_colours[i])
 plt.legend()
+plt.axis('equal')
+plt.xlabel('X (AU)')
+plt.ylabel('Y (AU)')
+"""
+#create zoomed in plot of sun's orbit
+axins = plt.inset_axes([0.6, 0.6, 0.37, 0.37])   #section of plot to zoom in on
+axins.plot(x, y1, linestyle='-', label='Sample 1')
+axins.plot(x, y2, linestyle='--', label='Sample 2')
+
+sub_axes = plt.axes([0.3, 0.55, 0.15, 0.15]) #type: ignore
+sub_axes.plot(x_positions[:,0], y_positions[:,0], color=plot_colours[0])
+sub_axes.indicate_inset_zoom(sub_axes)
+"""
+plt.savefig("images/unstructured_1_moving_sun.pdf")
 plt.show()

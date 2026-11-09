@@ -87,7 +87,7 @@ num_steps = 3 * (365 * 24)  #multiple of earth years
 body_names = np.array(["Sun", "Arbitrary Planet"])
 masses = np.array([1.98892e30, 5.9742E24]) #arbitrary planet is given earth mass
 initial_radii = np.array([0, (0.4 + 1054/25000) * AU])
-plot_colours = ['gold', 'blue']
+plot_colours = ['#ef0000', "#3b8eb4"]
 
 #create blank arrays of equal dimensions to store position and velocity data
 x_positions = np.zeros((num_steps,len(body_names))); y_positions = np.zeros((num_steps,len(body_names)))
@@ -130,12 +130,15 @@ for i in range(1, len(body_names)):
     print(f'{body_names[i]:<12}{orbital_period:>15,.1f}{orbital_period/3600:>15,.2f}{orbital_period/(3600*24):>15,.2f}')
 
 #plot orbits of bodies to screen
-plt.figure(figsize=(7, 7))
+plt.figure(figsize=(6, 6))
 for i in range(len(body_names)):
     if i == 0: #need to use marker for sun as it never moves
-        plt.plot(x_positions[0, i], y_positions[0, i], 'o', color=plot_colours[i], markersize=12, label=body_names[i]) #[0, i] used to avoid drawing same point over and over
+        plt.plot(x_positions[0, i]/AU, y_positions[0, i]/AU, 'o', color=plot_colours[i], markersize=12, label=body_names[i]) #[0, i] used to avoid drawing same point over and over
     else:
-        plt.plot(x_positions[:, i], y_positions[:, i], color=plot_colours[i], label=body_names[i])
+        plt.plot(x_positions[:, i]/AU, y_positions[:, i]/AU, color=plot_colours[i], label=body_names[i])
 plt.axis('equal')
+plt.xlabel('X (AU)')
+plt.ylabel('Y (AU)')
+plt.savefig("images/structured3.pdf")
 plt.legend()
 plt.show()
