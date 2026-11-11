@@ -19,6 +19,10 @@
 }
 \usepackage{geometry}  %useful for changing page layout
 \geometry{top=3cm, bottom=3cm, left=3cm, right=3cm}
+\usepackage{booktabs} %for tables
+\usepackage{biblatex} %For referencing
+
+
 %example of referencing code if needed
 % \begin{lstlisting}[language=Python]
 %     if y_coord_prev * y_coord_now < 0 and x_coord_now > 0:
@@ -34,20 +38,113 @@
 
 \section{Abstract}
 
-\section{Use of AI}
-
 \section{Introduction}
+%Introduction to the area and an 
+
+%overview of the computational problem
 
 \section{Methods}
 \subsection{Structured Work}
-%Unstructured 1 - Earth moving around Sun
-The first script written aimed to simulate the motion of the Earth in orbit around the Sun. 
-Since the mass of the Sun is much larger than that of the Earth ($\frac{M_{Sun}}{M_{Earth}}\approx\num{3.3e5}$), it was assumed that the affect of Earth's pull 
-on the Sun was negligible and the Sun would remain at rest during the simulation. 
+%Setup of simulation
+Numpy arrays were used to track key variables in the simulation, such as the positions, velocity components and masses of all the bodies in the simulation. 
+[DISCUSS HOW THE POSITIONS AND VELOCITIES ARE STORED IN 2D ARRAYS AND MASSES 1D ARRAY]
+Numpy arrays were used as they are optimised for fast operations and vectorisation, making them more efficient than python lists.(https://numpy.org/devdocs/user/whatisnumpy.html [NEED TO CITE CORRECTLY]) 
 
-The Sun was fixed at (0,0) and the Earth was placed 1 AU, where 1 AU = $\num{1.495978707e11}$m, away from the Sun at a random angle with respect to the horizontal axis.
+It was decided that the Runge-Kutta method would be used to update the positions and velocities of all bodies in the system. 
+This method was chosen as it is highly effective in solving differential equations and outperforms other common numerical methods such as Euler's method or the 
+Euler-Cromer method.
+An implementation of this algorithm was written in python and was saved to a file named "orbits.py", which will be seen throughout the appendix.  
+
+
+%Unstructured 1 - Earth moving around Sun
+The first simulation written aimed to simulate the motion of the Earth in orbit around the Sun. 
+In this script the Sun was fixed in place at coordinates (0,0) and the earth was set 1 AU = $\num{1.495978707e11}$m away from the Sun at an random angle 
+relative to the horizontal axis. 
+Though we expect the pull of the Earth to impart an acceleration on the Sun, we are justified in assuming this pull will be negligible as the Sun's mass is far 
+greater than that of the Earth ($\frac{M_{Sun}}{M_{Earth}}\approx\num{3.3e5}$). 
+The Earth was given an initial velocity determined by equation \ref{circular motion velocity}. 
+\begin{equation}
+    \label{circular motion velocity}
+    v=\sqrt{\frac{Gm_{Sun}}{r}}
+\end{equation}
 The Runge-Kutta method was used to numerically calculate the updated position and velocity of the Earth after each timestep. 
-The simulation was run for 3 years at a timestep of 1 hour and the position of the Earth was plotted using matplotlib to give Figure~\ref{fig:structured1}. 
+The simulation was run for 3 years at a timestep of 1 hour and the position of the Earth was plotted using matplotlib. 
+
+
+%Structured 2 - Measuring Earth's Period
+To measure the accuracy of the simulation, the orbital period of the Earth was measured as this can be directly compared to real data. 
+This was achieved in the simulation by recording the times which the Earth crossed the positive x-axis. 
+To determine when the Earth actually crossed the x-axis, the product of its current and previous y-coordinates was calculated. 
+If this value was negative and the current x-coordinate was positive then the Earth must have crossed the x-axis during the previous timestep.
+To more accurately determine the moment the Earth crossed the x-axis, a linear interpolation method was used, which gives the crossing time as 
+\begin{equation}
+    t=t_1-\frac{y_1}{y_1-y_0}dt
+\end{equation}
+where $t_1$ was the time after crossing the x-axis, $y_0$ and $y_1$ were the y-coordinates of the Earth before and after the crossing and dt is the timestep used. 
+This method is justified as when considering the Earth's motion over 1 timestep, the Earth's orbit should be well approximated by a straight line.
+The script was run at a range of timesteps (which can be seen in [RESULTS]) and the orbital period was measured. 
+
+
+%Structured 3 - Simulation of body based on student number
+This programme was tested on a new body, which we will call Erid, whose initial radius was given, in AU, by the formula:
+\begin{equation}
+    r=0.4+\frac{1054}{25000} AU=0.44216 AU
+\end{equation} 
+Here the digits 1054 were determined from the author's student number. 
+The mass of Erid was assumed to be equal to the Earth's but this assumption should have no effect on the simulation. 
+This is because the acceleration imparted on Erid is independent of the Erid's mass, it only depends on the mass of the Sun. 
+The scripts previously ran on the Earth were ran on Erid to examine its orbit around the Sun and measure it's orbital period. 
+
+
+\subsection{Unstructured Work}
+%Unstructured 1 - Moving Sun
+The first unstructured modification made to the simulation was to allow the Sun to move from its initial position at (0,0). 
+This change was made as this is more reflective of how our Solar System actually behaves. 
+Since the simulation is already written to store all position and velocity data in numpy arrays, only the dimension on these arrays needed to be increased
+to track the behaviour of both bodies. 
+The updated simulation was run on a system consisting of the Sun and Earth. 
+The trajectory of both bodies and the period of Earth's orbit was recorded. 
+
+
+%Unstructured 2 - Adding all planets for the Solar System
+Next it was decided to add all other planets of the Solar System to the simulation. 
+This change can be made similarly to the previous modification where the dimensions of the arrays describing position and velocity need to be increased. 
+At the start of the simulation all bodies are placed a distance of their semimajor axis away from the Sun[REFERENCE] at random angles relative to 
+the horizontal axis. 
+The decision was made to start all planets at random angles was made as alternative to starting all planets on the x-axis. 
+Starting the planets all aligned is a very [specific/ordered] state of the system and not reflective of the average state of the system. 
+Typically the planets are scattered around the Sun, some close together, some far apart. 
+By initialising the system at random angles like this, we start at a more typical state and expect to make more accurate predictions of the system. 
+The simulation was run at a timestep of () for (). 
+The positions of all bodies were plotted and the average orbital period of the planets was recorded. 
+
+
+%Unstructured 3 - Measuring energy of the system
+To measure the stability of the system, the kinetic energy of each planet was measured at each timestep. 
+This was then averaged across the whole simulation to get each planet's mean kinetic energy. 
+The kinetic energy of each planet across the simulation was divided by its respective mean. 
+This scales the mean kinetic energy of each planet to 1 which gives a useful metric for measuring kinetic energy deviation. 
+The simulation was modified to calculate the greatest deviation in kinetic energy for each planet and plot the kinetic energy of all planets over time. 
+
+
+%Unstructured 4 - Kirkwood gaps
+
+
+
+
+
+
+
+\section{Results}
+\subsection{Structured Results}
+%Structured 1 & 2
+
+
+
+
+
+
+to give Figure~\ref{fig:structured1}. 
 \begin{figure}[hbt!]
     \centering
     \includegraphics[width=0.8\textwidth]{images/structured1.pdf}
@@ -55,31 +152,28 @@ The simulation was run for 3 years at a timestep of 1 hour and the position of t
     \label{fig:structured1}
 \end{figure}
 
-%Structured 2 - Measuring Earth's Period
-Visually this behaviour seems accurate as the Earth is seen travelling in a steady circular orbit. 
-To measure the accuracy of the simulation it was decided that the period of Earth's orbit should be measured. 
-This was achieved by measuring time between successive crossings of the positive X-axis.  
+Earth orbital data:
+\begin{table}[hbt!]
+\centering
+\begin{tabular}{@{}lllll@{}}
+\toprule
+Timestep (Hours) & Period (Seconds) & Period (Hours) & Period (Earth Days) \\ \midrule
+1  &   31,564,128.5 & 8,767.81 & 365.33 \\
+2  &   31,564,128.5 & 8,767.81 & 365.33 \\
+4  &   31,564,128.5 & 8,767.81 & 365.33 \\
+6  &   31,564,128.5 & 8,767.81 & 365.33 \\
+12  &  31,564,128.5 & 8,767.81 & 365.33 \\
+24  &  31,564,128.0 & 8,767.81 & 365.33 \\
+72  &  31,563,797.4 & 8,767.72 & 365.32 \\
+168  & 31,510,833.1 & 8,753.01 & 364.71 \\
+336  & 26,319,742.0 & 7,311.04 & 304.63 \\ \bottomrule
+\end{tabular}
+\caption{Period of Earth's orbit}
+\label{table:Earth period data}
+\end{table}
 
-To determine when the Earth actually crossed the x-axis, the product of its current and previous y-coordinates was calculated. 
-If this value was negative and the current x-coordinate was positive then the Earth must have crossed the x-axis in the previous timestep.
-To more accurately determine the moment the Earth crossed the x-axis, a linear interpolation method was used, which gives the crossing time as 
-\begin{equation}
-    t=t_1-\frac{y_1}{y_1-y_0}dt
-\end{equation}
-where $t_1$ was the time after crossing the x-axis, $y_0$ and $y_1$ were the y-coordinates of the Earth before and after the crossing and dt is the timestep used. 
-This method was selected as when considering the Earth's motion over 1 timestep (1 hour) the Earth's orbit looks approximately linear. 
-This modification was made to the code and the script was run for 3 calendar years (3 x 365 days) with a timestep of 1 hour.
-This gave Earth's orbital period as 365.33 days. 
 
-%Structured 3 - Simulation of body based on student number
-This programme was tested on a new body, which we will call BLANK, whose initial radius in AU was given by the formula:
-\begin{equation}
-    r=0.4+\frac{1054}{25000} AU=0.44216 AU
-\end{equation} 
-where the digits 1054 were determined from the author's student number. 
-The mass of this body was assumed to be equal to the Earth's but this assumption should have no effect on the simulation. 
-This is because the acceleration imparted on the Earth is independent of the Earth's mass, it only depends on the mass of the Sun. 
-Running the same programme on BLANK we see it also follows a circular orbit around the Sun shown in Figure~\ref{fig:structured3}, but with a much shorter period of 107.41 days. 
+Running the same programme on Erid we see it also follows a circular orbit around the Sun shown in Figure~\ref{fig:structured3}, but with a much shorter period of 107.41 days. 
 \begin{figure}[hbt!]
     \centering
     \includegraphics[width=0.8\textwidth]{images/structured3.pdf}
@@ -87,17 +181,29 @@ Running the same programme on BLANK we see it also follows a circular orbit arou
     \label{fig:structured3}
 \end{figure}
 
+Erid's orbital data:
+\begin{table}[hbt!]
+\centering
+\begin{tabular}{@{}lllll@{}}
+\toprule
+Timestep (Hours) & Period (Seconds) & Period (Hours) & Period (Earth Days) \\ \midrule
+1  &   9,280,320.6  & 2,577.87  & 107.41 \\
+2  &   9,280,320.6  & 2,577.87  & 107.41 \\
+4  &   9,280,320.6  & 2,577.87  & 107.41 \\
+6  &   9,280,320.6  & 2,577.87  & 107.41 \\
+12  &  9,280,317.3  & 2,577.87  & 107.41 \\
+24  &  9,280,114.4  & 2,577.81  & 107.41 \\
+72  &  9,120,859.7  & 2,533.57  & 105.57 \\
+168  & 9,225,918.3  & 2,562.76  & 106.78 \\
+336  & 7,865,272.3  & 2,184.80  & 91.03  \\ \bottomrule
+\end{tabular}
+\caption{Period of Erid's orbit}
+\label{table:Erid period data}
+\end{table}
+% Enter table of period for Erid
 
 
-\subsection{Unstructured Work}
-
-
-
-
-\section{Results}
-"Your results"
-
-"Discussion of results and conclusions"
+\subsection{Unstructured Results}
 
 
 \section{Conclusion}
@@ -108,7 +214,7 @@ Inaccuracies in this simulation may originate from a few sources, such as
     \item Choice of simulation timestep
 \end{itemize}
 
-
+\section{Use of AI}
 
 \section{Appendix}
 "An appendix with a printout of your Python program(s)"

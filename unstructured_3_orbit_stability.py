@@ -61,20 +61,25 @@ for loop in tqdm(range(1, num_steps), ncols=90, ascii=" ░▒█", desc="Runnin
 
 #print period data in table
 print(f'Orbital period results:\n')
-print(f'{'Planet':<12}{'Seconds':>15}{'Hours':>15}{'Days':>15}')
-print(f'---------------------------------------------------------')
+print(f'{'Planet':<12}{'Seconds':>15}{'Hours':>15}{'Days':>15}{'KE Deviation(%)':>18}')
+print(f'---------------------------------------------------------------------------')
+mean_planet_kinetic_energy = np.mean(planet_kinetic_energy, axis=0) #mean of column (planet) in array
+normalised_planet_energy = planet_kinetic_energy/mean_planet_kinetic_energy
 for i in range(1, len(body_names)):
     times = crossings[i-1]
     if len(times) < 2: #body needs to pass x axis twice to measure period
         print(f'{body_names[i]:<12}{'Insufficient crossings':>45}')
         continue
     orbital_period = np.diff(times).mean()
-    print(f'{body_names[i]:<12}{orbital_period:>15,.1f}{orbital_period/3600:>15,.2f}{orbital_period/(3600*24):>15,.2f}')
+    
+    #print(normalised_planet_energy[i])
+    greatest_deviation = np.max(abs(normalised_planet_energy-1), axis=0)
+    print(f'{body_names[i]:<12}{orbital_period:>15,.1f}{orbital_period/3600:>15,.2f}{orbital_period/(3600*24):>15,.2f}{greatest_deviation[i-1]*100:>18,.2f}')
 
 
 #for very large simulations check if plotting is wanted
 show_plot = 'y'
-if num_steps > 500000:
+if num_steps > 5000:
     show_plot = input('Create plot? [y/n]: ') 
 
 if show_plot == 'y':
@@ -90,20 +95,7 @@ if show_plot == 'y':
 
     #create normalised plot of planet energy
     #terrestrial planets
-    normalised_planet_energy = planet_kinetic_energy/planet_kinetic_energy[0]
-
-    """
-    plt.figure(2, figsize=(6, 6))
-    plt.title("Normalised Terrestrial Planet Orbit Stability")
-    for planet in range(0, math.floor(len(normalised_energy[0])/2)):
-        plt.plot(np.linspace(0, timestep*num_steps, num=num_steps), normalised_energy[:, planet], label=body_names[planet+1]) 
-    plt.ylabel('Normalised Kinetic Energy')
-    plt.xlabel('Time')
-    plt.savefig("images/unstructured_3_terrestrial_planet_stability.pdf")
-    plt.legend()
-    """
     plt.figure(2, figsize=(8, 6))
-
     for planet in range(1, 5):
         plt.subplot(2, 2, planet)
         plt.plot(np.linspace(0, timestep*num_steps, num=num_steps), normalised_planet_energy[:, planet-1], label=body_names[planet], color=plot_colours[planet])
@@ -113,29 +105,15 @@ if show_plot == 'y':
     plt.xlabel('Time')
     plt.savefig("images/unstructured_3_terrestrial_body_energy_subplot.pdf")
 
-    # plt.plot(x,y)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     #gas giants
-    plt.figure(3, figsize=(6, 6))
+    plt.figure(3, figsize=(8, 6))
     plt.title("Normalised Gaseous Planet Orbit Stability")
-    for planet in range(math.floor(len(normalised_planet_energy[0])/2), len(normalised_planet_energy[0])):
-        plt.plot(np.linspace(0, timestep*num_steps, num=num_steps), normalised_planet_energy[:, planet], label=body_names[planet+1])
+    for planet in range(5, 9):
+        plt.subplot(2, 2, planet-4)
+        plt.plot(np.linspace(0, timestep*num_steps, num=num_steps), normalised_planet_energy[:, planet-1], label=body_names[planet], color=plot_colours[planet])
+        plt.legend()
     plt.ylabel('Normalised Kinetic Energy')
     plt.xlabel('Time')
-    plt.savefig("images/unstructured_3_gaseous_planet_stability.pdf")
     plt.legend()
-
+    plt.savefig("images/unstructured_3_gaseous_planet_stability.pdf")
     plt.show()
