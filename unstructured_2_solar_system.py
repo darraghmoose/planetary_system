@@ -10,8 +10,8 @@ body_names = np.array(["Sun", "Mercury", "Venus", "Earth", "Mars", "Jupiter", "S
 masses = np.array([1.98892e30, 3.30104E23 , 4.86732E24, 5.9742E24, 6.4169E23, 1.89813E27, 5.68319E26, 8.68103E25, 1.0241E26])
 initial_radii = np.array([0, 5.7909227E10 , 1.08209475E11, 1.495978707e11, 2.27956E11, 7.78340821E11, 1.426666422E12, 2.870658186E12, 4.498396441E12])
 
-timestep = 12 * 3600        #seconds per timestep
-num_steps = 18 * (365 * 24) #iterations per simulation
+timestep = 1 * 3600        #seconds per timestep
+num_steps = 100 * (365 * 24) #iterations per simulation
 
 #create blank arrays of equal dimensions to store position and velocity data
 x_positions = np.zeros((num_steps,len(body_names))); y_positions = np.zeros((num_steps,len(body_names)))
@@ -72,4 +72,4 @@ if show_plot == 'y':
     plt.xlabel('X (AU)')
     plt.ylabel('Y (AU)')
     plt.savefig("images/unstructured_2_solar_system.pdf")
-    #plt.show()
+    plt.show()

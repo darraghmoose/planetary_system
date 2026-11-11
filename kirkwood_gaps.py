@@ -14,7 +14,7 @@ M_SUN = 1.98892e30
 
 #simulation runtime parameters
 timestep = 24 * 3600        #seconds per timestep
-num_steps = 1 * (365 * 24)  #iterations per simulaiton
+num_steps = 5 * (365 * 24)  #iterations per simulaiton
 
 #use arrays to store data for each body      -      data taken from https://solarsystem.nasa.gov/planet-compare/ 
 """
@@ -32,9 +32,9 @@ masses = np.array([1.98892e30, 1.89813E27, 0.95E21])
 initial_radii = np.array([0, 5.2*AU, 5.00* AU])  
 """
 
-body_names = np.array(["Sun", "Jupiter", "Launched"])
+body_names = np.array(["Sun", "Jupiter", "Asteroid"])
 masses = np.array([1.98892e30, 1.89813E27, 0.95E21])
-initial_radii = np.array([0, 5.2*AU, 0.20*AU])
+initial_radii = np.array([0, 5.2*AU, 4.8*AU])
 
 
 #create blank arrays of equal dimensions to store position and velocity data

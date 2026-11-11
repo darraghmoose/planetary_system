@@ -34,7 +34,7 @@ def acceleration(x_positions, y_positions, mass) -> tuple:
     y_seperations = y_positions[None, :] - y_positions[:, None] #same array but for y position
     #"https://stackabuse.com/guide-to-numpy-matrix-subtraction/" info on how vector subreaction works to make difference matrix
     seperations = np.sqrt(x_seperations**2 + y_seperations**2) #calculate geometric seperation between bodies. works itemwise across both arrays
-    """when i=j their seperation =0. this iwll lead to 0/0 error when calculating k. We want k=0 for this case. 
+    """when i=j their seperation =0. this will lead to 0/0 error when calculating k. We want k=0 for this case. 
     To do this, we use fill_diagonal() to set seperation[i][i]=infinity to give 0/infinity which the computer will read as 0 giving k=0 """
     np.fill_diagonal(seperations, np.inf) #np.inf gives infinity to guarantee k=0
 

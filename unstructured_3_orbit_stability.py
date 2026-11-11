@@ -81,28 +81,61 @@ if show_plot == 'y':
     # #plot orbits of bodies
     plt.figure(1, figsize=(7, 7))
     for i in range(len(body_names)):
-        plt.plot(x_positions[:, i], y_positions[:, i], label=body_names[i], color=plot_colours[i])
+        plt.plot(x_positions[:, i]/AU, y_positions[:, i]/AU, label=body_names[i], color=plot_colours[i])
     plt.legend()
     plt.axis('equal')
+    plt.xlabel('X (AU)')
+    plt.ylabel('Y (AU)')
+    plt.savefig("images/unstructured_3_total_system_studying_stability.pdf")
 
     #create normalised plot of planet energy
     #terrestrial planets
-    normalised_energy = planet_kinetic_energy/planet_kinetic_energy[0]
+    normalised_planet_energy = planet_kinetic_energy/planet_kinetic_energy[0]
+
+    """
     plt.figure(2, figsize=(6, 6))
     plt.title("Normalised Terrestrial Planet Orbit Stability")
     for planet in range(0, math.floor(len(normalised_energy[0])/2)):
         plt.plot(np.linspace(0, timestep*num_steps, num=num_steps), normalised_energy[:, planet], label=body_names[planet+1]) 
     plt.ylabel('Normalised Kinetic Energy')
     plt.xlabel('Time')
+    plt.savefig("images/unstructured_3_terrestrial_planet_stability.pdf")
     plt.legend()
+    """
+    plt.figure(2, figsize=(8, 6))
+
+    for planet in range(1, 5):
+        plt.subplot(2, 2, planet)
+        plt.plot(np.linspace(0, timestep*num_steps, num=num_steps), normalised_planet_energy[:, planet-1], label=body_names[planet], color=plot_colours[planet])
+        plt.legend()
+    plt.suptitle("Terrestrial Planets Stability")
+    plt.ylabel('Normalised Kinetic Energy')
+    plt.xlabel('Time')
+    plt.savefig("images/unstructured_3_terrestrial_body_energy_subplot.pdf")
+
+    # plt.plot(x,y)
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     #gas giants
     plt.figure(3, figsize=(6, 6))
     plt.title("Normalised Gaseous Planet Orbit Stability")
-    for planet in range(math.floor(len(normalised_energy[0])/2), len(normalised_energy[0])):
-        plt.plot(np.linspace(0, timestep*num_steps, num=num_steps), normalised_energy[:, planet], label=body_names[planet+1]) 
+    for planet in range(math.floor(len(normalised_planet_energy[0])/2), len(normalised_planet_energy[0])):
+        plt.plot(np.linspace(0, timestep*num_steps, num=num_steps), normalised_planet_energy[:, planet], label=body_names[planet+1])
     plt.ylabel('Normalised Kinetic Energy')
     plt.xlabel('Time')
+    plt.savefig("images/unstructured_3_gaseous_planet_stability.pdf")
     plt.legend()
 
     plt.show()
