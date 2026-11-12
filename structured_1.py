@@ -7,8 +7,8 @@ from orbits import initial_positions, initial_velocity, body_update
 AU = 1.495978707e11
 G = 6.67e-11
 M_SUN = 1.98892e30
-timestep = 3600 #3600 seconds = 1 hour
-num_steps = 3 * (365 * 24)  #multiple of earth years
+timestep = 12 * 3600 #3600 seconds = 1 hour
+num_steps = 5 * (365 * 2)  #multiple of earth years
 
 #Orbiting bodies data
 body_names = np.array(["Sun", "Earth"])

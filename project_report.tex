@@ -20,7 +20,7 @@
 \usepackage{geometry}  %useful for changing page layout
 \geometry{top=3cm, bottom=3cm, left=3cm, right=3cm}
 \usepackage{booktabs} %for tables
-\usepackage{biblatex} %For referencing
+\usepackage{natbib} %For referencing
 
 
 %example of referencing code if needed
@@ -41,12 +41,25 @@
 \section{Introduction}
 %Introduction to the area and an 
 
+\begin{figure}[hbt!]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/kirkwood_histogram.pdf}
+    \caption{Histogram showing density of asteroids in the Asteroid Belt. \citep{kirkwood_gaps_plot}}
+    \label{fig:Kirkwood histogram}
+\end{figure}
+
+
 %overview of the computational problem
+
+
+
+
+
 
 \section{Methods}
 \subsection{Structured Work}
 %Setup of simulation
-Numpy arrays were used to track key variables in the simulation, such as the positions, velocity components and masses of all the bodies in the simulation. 
+Numpy arrays were used to track key variables in the simulation, including the positions, velocity components and masses of all bodies. 
 [DISCUSS HOW THE POSITIONS AND VELOCITIES ARE STORED IN 2D ARRAYS AND MASSES 1D ARRAY]
 Numpy arrays were used as they are optimised for fast operations and vectorisation, making them more efficient than python lists.(https://numpy.org/devdocs/user/whatisnumpy.html [NEED TO CITE CORRECTLY]) 
 
@@ -67,8 +80,9 @@ The Earth was given an initial velocity determined by equation \ref{circular mot
     \label{circular motion velocity}
     v=\sqrt{\frac{Gm_{Sun}}{r}}
 \end{equation}
+where...
 The Runge-Kutta method was used to numerically calculate the updated position and velocity of the Earth after each timestep. 
-The simulation was run for 3 years at a timestep of 1 hour and the position of the Earth was plotted using matplotlib. 
+The simulation was run for 3 years at a timestep of 12 hours and the position of the Earth was plotted using matplotlib. 
 
 
 %Structured 2 - Measuring Earth's Period
@@ -128,6 +142,26 @@ The simulation was modified to calculate the greatest deviation in kinetic energ
 
 
 %Unstructured 4 - Kirkwood gaps
+The Kirkwood gaps in the Solar system lie in the asteroid belt between Mars and Jupiter. 
+Their existence is a consequence of the resonance of their orbital period with Jupiter's orbit. 
+To investigate their behaviour in this simulation, a system consisting only of the Sun, Jupiter and an asteroid with an initial radius
+between Mars and Jupiter was considered. 
+
+A script was written to simulate the motion of asteroids 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -138,21 +172,33 @@ The simulation was modified to calculate the greatest deviation in kinetic energ
 \section{Results}
 \subsection{Structured Results}
 %Structured 1 & 2
+Figure~\ref{fig:Earth orbiting fixed sun} shows the calculated orbit of Earth around the Sun when the Sun is fixed at the coordinates (0,0). 
+% In this figure the Sun is shown as a red marker at (0,0)
+In this figure the simulation is taking timesteps of 12 hours and running for a total of 5 years. 
+Earth is seen to maintain a circular orbit around the Sun across the simulated 5 years. 
 
-
-
-
-
-
-to give Figure~\ref{fig:structured1}. 
 \begin{figure}[hbt!]
     \centering
     \includegraphics[width=0.8\textwidth]{images/structured1.pdf}
-    \caption{Structured 1 plot (rename)}
-    \label{fig:structured1}
+    \caption{Trajectory of the Earth in orbit of a stationary Sun}
+    \label{fig:Earth orbiting fixed sun}
 \end{figure}
 
-Earth orbital data:
+
+To determine the accuracy of this orbit, the Earth's orbital period was measured by tracking its crossing of the positive x-axis. 
+The orbit's period was measured at an array of timesteps ranging from 1 hour to 14 days (336 hours). 
+The results can be seen in table~\ref{table:Earth period data}.  
+
+These results show that the Earth's period converges to a single value of the timestep is decreased. 
+This converging value is seen to be 31,564,128.5 seconds or 365.33 days. 
+This value is close to the true value of 1 sidereal year, the time Earth takes to complete 1 orbit around the Sun, of 365.26 days. 
+
+It is also seen that the programme converges on this value quite quickly, where any timestep less than 12 hours shows no noticeable improvement to 
+the period measured to one decimal place. 
+The relative error between a timestep of 1 hour and 72 hours is $\approx\num{1.1e-5}$. 
+A significant deviation is only seen at timesteps on the scale of two weeks where the relative error is $\approx0.17$. 
+
+
 \begin{table}[hbt!]
 \centering
 \begin{tabular}{@{}lllll@{}}
@@ -173,15 +219,32 @@ Timestep (Hours) & Period (Seconds) & Period (Hours) & Period (Earth Days) \\ \m
 \end{table}
 
 
-Running the same programme on Erid we see it also follows a circular orbit around the Sun shown in Figure~\ref{fig:structured3}, but with a much shorter period of 107.41 days. 
+The simulated orbit of out hypothetical planet Erid is seen in Figure~\ref{fig:erid orbit plot} where we see the planet following a circular path 
+around the Sun at a radius of 0.44216AU.
+In this figure the simulation was run for 5 years at a timestep of 12 hours. 
 \begin{figure}[hbt!]
     \centering
     \includegraphics[width=0.8\textwidth]{images/structured3.pdf}
-    \caption{Structured 2 plot (rename)}
-    \label{fig:structured3}
+    \caption{Trajectory of planet Erid around a stationary Sun}
+    \label{fig:erid orbit plot}
 \end{figure}
 
-Erid's orbital data:
+
+The simulation was run also at the same array of timesteps as the Earth was, tracking axis crossings to calculate its orbital period. 
+The results of this are seen in Table~\ref{table:Erid period data}. 
+
+From this table it is seen that the programme converges on a single value for Erid's period of 9,280,320.6 seconds, or 107.41 Earth days. 
+It is seen that timesteps of 6 hours or less make no noticeable improvement to the planet's calculated period. 
+This is smaller than the equivalent timestep for the Earth where a timestep of 12 hours made no measurable improvement, 
+The relative error between timesteps of 1 and 72 hours for Erid is $\approx\num{1.7e-2}$.
+A greater deviation is seen when comparing timesteps of 1 hour and 314 days where the relative error is $\approx\num{0.15}$
+
+Comparing these results to the results for Earth seen in Table~\ref{table:Earth period data}, Earth's period converges to the correct value 
+faster than Erid's period.
+Where the relative error between timesteps of 1 and 72 hours for Erid is approximately 1,500 times greater than it is for Earth.  
+However at extreme timesteps of 14 days, the relative errors are almost identical. 
+[WHAT DOES THIS MEAN]
+
 \begin{table}[hbt!]
 \centering
 \begin{tabular}{@{}lllll@{}}
@@ -200,19 +263,25 @@ Timestep (Hours) & Period (Seconds) & Period (Hours) & Period (Earth Days) \\ \m
 \caption{Period of Erid's orbit}
 \label{table:Erid period data}
 \end{table}
-% Enter table of period for Erid
 
 
 \subsection{Unstructured Results}
 
 
+
+
 \section{Conclusion}
-Inaccuracies in this simulation may originate from a few sources, such as
+Inaccuracies in this simulation may originate from sources such as:
 \begin{itemize}
     \item Circular orbits vs. elliptical orbits
     \item No orbital inclination
     \item Choice of simulation timestep
 \end{itemize}
+
+
+
+\bibliographystyle{dcu}
+\bibliography{report_bibliography.bib}
 
 \section{Use of AI}
 

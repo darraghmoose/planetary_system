@@ -34,7 +34,7 @@ initial_radii = np.array([0, 5.2*AU, 5.00* AU])
 
 body_names = np.array(["Sun", "Jupiter", "Asteroid"])
 masses = np.array([1.98892e30, 1.89813E27, 0.95E21])
-initial_radii = np.array([0, 5.2*AU, 4.8*AU])
+initial_radii = np.array([0, 5.2*AU, 4.5*AU])
 
 
 #create blank arrays of equal dimensions to store position and velocity data

@@ -51,8 +51,8 @@ def run_simulation(timestep):
 def unstructured3_1():
     #constants & settings
     AU = 1.495978707e11
-    timestep = 3600 #3600 seconds = 1 hour
-    num_steps = 3 * (365 * 24)  #multiple of earth years
+    timestep = 12 * 3600 #3600 seconds = 1 hour
+    num_steps = 5 * (365 * 2)  #multiple of earth years
 
     #create blank arrays of equal dimensions to store position and velocity data
     x_positions = np.zeros((num_steps,len(body_names))); y_positions = np.zeros((num_steps,len(body_names)))

@@ -61,7 +61,7 @@ def asteroid_stability_simulation(target_radii):
                     crossings[planet-1].append(crossing_time)
 
         #calculate energy deviation
-        normalised_energy = body_energy/body_energy[0]
+        normalised_energy = body_energy/np.mean(body_energy, axis=0) #np.max(abs(normalised_planet_energy-1), axis=0)
         energy_deviation = np.max(np.abs(normalised_energy-1), axis=0)
 
         #save results for this iteration to asteroid info 
