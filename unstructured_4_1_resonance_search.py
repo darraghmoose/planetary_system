@@ -23,7 +23,7 @@ def asteroid_stability_simulation(target_radii):
     simulation_asteroid_crossings = [[] for i in range(len(target_radii))]; simulation_jupiter_crossings = [[] for i in range(len(target_radii))]
 
     for i in range(len(target_radii)):
-        initial_radii = np.array([0, 5.2*AU, target_radii[i]])
+        initial_radii = np.array([0, 7.78479E11, target_radii[i]])
 
         #create blank arrays of equal dimensions to store position and velocity data
         x_positions = np.zeros((num_steps,len(body_names))); y_positions = np.zeros((num_steps,len(body_names)))
@@ -61,7 +61,7 @@ def asteroid_stability_simulation(target_radii):
                     crossings[planet-1].append(crossing_time)
 
         #calculate energy deviation
-        normalised_energy = body_energy/np.mean(body_energy, axis=0) #np.max(abs(normalised_planet_energy-1), axis=0)
+        normalised_energy = body_energy/np.mean(body_energy, axis=0)
         energy_deviation = np.max(np.abs(normalised_energy-1), axis=0)
 
         #save results for this iteration to asteroid info 
@@ -76,9 +76,9 @@ def asteroid_stability_simulation(target_radii):
 
 #simulation parameters
 timestep = 24 * 3600        #seconds per timestep
-num_steps = 2 * (365 * 24)  #iterations per simulaiton
-start_radius = 3.0 *AU
-end_radius = 5.0 * AU
+num_steps = 50 * (365)  #iterations per simulaiton
+start_radius = 2.4 *AU
+end_radius = 2.6 * AU
 num_asteroids = 21
 target_radii = np.linspace(start_radius, end_radius, num_asteroids) #if want to simulate only certain radii, replace target_radii with list of desired radii
 
@@ -102,6 +102,7 @@ for i in range(len(target_radii)):
     print(f'{target_radii[i]/AU:<15,.2f}{orbital_period:>15,.1f}{orbital_period/3600:>15,.2f}{orbital_period/(3600*24):>15,.2f}{period_ratio:>15,.3f}{asteroid_deviations[i]*100:15,.1f}') #type: ignore
 
 """
+TODO : FIX PLOT TO SHOW ALL SWEPT BODIES
 #plot orbits of bodies to screen
 plot_colours = ['#ef0000', '#c98226', '#8c8987', '#dfb18c', '#3c6690', '#ff6b4d', '#f8d280', '#5d8b8e', '#4e5a74']
 plt.figure(1, figsize=(6, 6))

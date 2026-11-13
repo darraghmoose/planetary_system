@@ -20,8 +20,8 @@
 \usepackage{geometry}  %useful for changing page layout
 \geometry{top=3cm, bottom=3cm, left=3cm, right=3cm}
 \usepackage{booktabs} %for tables
-\usepackage{natbib} %For referencing
-
+\usepackage[numbers, square]{natbib} %For referencing
+\usepackage{subcaption} %For sub-figures
 
 %example of referencing code if needed
 % \begin{lstlisting}[language=Python]
@@ -44,7 +44,7 @@
 \begin{figure}[hbt!]
     \centering
     \includegraphics[width=0.8\textwidth]{images/kirkwood_histogram.pdf}
-    \caption{Histogram showing density of asteroids in the Asteroid Belt. \citep{kirkwood_gaps_plot}}
+    \caption{Histogram of density of asteroids in the Asteroid Belt \citep{kirkwood_gaps_plot}}
     \label{fig:Kirkwood histogram}
 \end{figure}
 
@@ -61,7 +61,7 @@
 %Setup of simulation
 Numpy arrays were used to track key variables in the simulation, including the positions, velocity components and masses of all bodies. 
 [DISCUSS HOW THE POSITIONS AND VELOCITIES ARE STORED IN 2D ARRAYS AND MASSES 1D ARRAY]
-Numpy arrays were used as they are optimised for fast operations and vectorisation, making them more efficient than python lists.(https://numpy.org/devdocs/user/whatisnumpy.html [NEED TO CITE CORRECTLY]) 
+Numpy arrays were used as they are optimised for fast operations and vectorisation, making them more efficient than python lists \cite{numpy_efficiency}. 
 
 It was decided that the Runge-Kutta method would be used to update the positions and velocities of all bodies in the system. 
 This method was chosen as it is highly effective in solving differential equations and outperforms other common numerical methods such as Euler's method or the 
@@ -120,15 +120,22 @@ The updated simulation was run on a system consisting of the Sun and Earth.
 The trajectory of both bodies and the period of Earth's orbit was recorded. 
 
 
-%Unstructured 2 - Adding all planets for the Solar System
+%Unstructured 2-1 - Finding appropriate timestep for the Solar System
 Next it was decided to add all other planets of the Solar System to the simulation. 
 This change can be made similarly to the previous modification where the dimensions of the arrays describing position and velocity need to be increased. 
+To determine an appropriate timestep for this part of the simulation, the orbital period of Mercury was simulated at a range of timesteps.
+By noting the timestep where the period seemed to converge to a constant value, an appropriate timestep was chosen.  
+
+
+%Unstructured 2-2 Adding all planets
 At the start of the simulation all bodies are placed a distance of their semimajor axis away from the Sun[REFERENCE] at random angles relative to 
 the horizontal axis. 
 The decision was made to start all planets at random angles was made as alternative to starting all planets on the x-axis. 
 Starting the planets all aligned is a very [specific/ordered] state of the system and not reflective of the average state of the system. 
 Typically the planets are scattered around the Sun, some close together, some far apart. 
 By initialising the system at random angles like this, we start at a more typical state and expect to make more accurate predictions of the system. 
+
+
 The simulation was run at a timestep of () for (). 
 The positions of all bodies were plotted and the average orbital period of the planets was recorded. 
 
@@ -141,31 +148,21 @@ This scales the mean kinetic energy of each planet to 1 which gives a useful met
 The simulation was modified to calculate the greatest deviation in kinetic energy for each planet and plot the kinetic energy of all planets over time. 
 
 
-%Unstructured 4 - Kirkwood gaps
-The Kirkwood gaps in the Solar system lie in the asteroid belt between Mars and Jupiter. 
+%Unstructured 4 - Kirkwood gaps (finding resonant radii)
+The Kirkwood gaps in the Solar system lie in the Asteroid Belt, between Mars and Jupiter. 
 Their existence is a consequence of the resonance of their orbital period with Jupiter's orbit. 
-To investigate their behaviour in this simulation, a system consisting only of the Sun, Jupiter and an asteroid with an initial radius
-between Mars and Jupiter was considered. 
+To investigate how this simulation reflects this behaviour, a system consisting only of the Sun, Jupiter and an asteroid within the Asteroid Belt was considered. 
+(some of above may be put into intro)
 
-A script was written to simulate the motion of asteroids 
+[CONSIDERING CHANGING TO USE SIM TO FIND RESONANCES FIRST AND THEN EXAMINE GAPS?]
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+A script was written to simulate the motion of asteroids at a range of radii within the Asteroid Belt (2.0AU - 3.3AU) with separations of $\Delta r=0.05AU$.
+These simulations were run consecutively to prevent nearby asteroids from interfering with each other. 
+Though this does happen in the Asteroid Belt, the aim of this script was to examine Jupiter's impact of their orbital stability and so it was decided it was best 
+to simulate the asteroids' behaviour consecutively. 
+This script aimed measure the orbital period of these asteroids and compared it to Jupiter's period to calculate the ratio of their orbits. 
+Where these orbital ratios are simple, whole number ratios, it is expected that the Kirkwood gaps are located here. 
+%Actually measuring their instability
 
 
 
@@ -196,7 +193,7 @@ This value is close to the true value of 1 sidereal year, the time Earth takes t
 It is also seen that the programme converges on this value quite quickly, where any timestep less than 12 hours shows no noticeable improvement to 
 the period measured to one decimal place. 
 The relative error between a timestep of 1 hour and 72 hours is $\approx\num{1.1e-5}$. 
-A significant deviation is only seen at timesteps on the scale of two weeks where the relative error is $\approx0.17$. 
+A significant deviation is only seen at timesteps on the scale of 14 days where the relative error is $\approx0.17$. 
 
 
 \begin{table}[hbt!]
@@ -243,8 +240,8 @@ Comparing these results to the results for Earth seen in Table~\ref{table:Earth 
 faster than Erid's period.
 Where the relative error between timesteps of 1 and 72 hours for Erid is approximately 1,500 times greater than it is for Earth.  
 However at extreme timesteps of 14 days, the relative errors are almost identical. 
-[WHAT DOES THIS MEAN]
-
+From this result we can predict that the closer an planet is to the body it is orbiting, the lower the timestep needed is to produce an accurate model.
+This will be useful when deciding on a timestep for the Solar System as only Mercury must be considered.  
 \begin{table}[hbt!]
 \centering
 \begin{tabular}{@{}lllll@{}}
@@ -266,7 +263,102 @@ Timestep (Hours) & Period (Seconds) & Period (Hours) & Period (Earth Days) \\ \m
 
 
 \subsection{Unstructured Results}
+%Sun allowed to move, zoom in on just its motion as well as unaffected Earth period
+The first unstructured change was to allow the Sun to move under the gravitational pull of the Earth. 
+Figure~\ref{fig:moving sun binary orbits} shows how the trajectories of the Earth and Sun are affected. 
+\begin{figure}[hbt!]
+    \centering
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/unstructured_1_moving_sun.pdf}
+        \caption{Earth's orbit around a moving Sun}
+        \label{fig:earth orbit around moving sun}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/unstructured_1_moving_sun_zoomed_on_sun.pdf}
+        \caption{Motion of the Sun (zoomed in)}
+        \label{fig:trajectory of sun pulled on by earth}
+    \end{subfigure}
+    \caption{Trajectories of the Sun and Earth when the Sun is free to move from its initial position.}
+    \label{fig:moving sun binary orbits}
+\end{figure}
+Visually the motion of Earth is almost indistinguishable from its motion around a stationary Sun. 
+To quantify the change the period of the orbit was measured to be 31,564,412.9 seconds. 
+This is an increase of 0.0009\%, a negligible difference. 
 
+There is also a noticeable change in the Sun's behaviour. 
+Its centre of mass now traces a circle through space with a radius of $\approx900Km$. 
+This result is far smaller than the diameter of the Sun, which is approximately 1,390,000Km \cite{size_of_the_sun}.
+With respect to the size of the Sun itself, its motion due to Earth's pull is almost insignificant. 
+
+
+%Unstructured 2-1 Mercury Convergence
+To select a suitable timestep to simulate all planets of the Solar System, Mercury's motion around the Sun was simulated at a range of timesteps 
+and its period was measured. The result of this simulation can be seen in Table~\ref{table:Mercury period data}. 
+From these results no improvement is seen beyond a timestep of 6 hours. 
+\begin{table}[hbt!]
+\centering
+\begin{tabular}{@{}lllll@{}}
+\toprule
+Timestep (Hours) & Period (Seconds) & Period (Hours) & Period (Earth Days) \\ \midrule
+1    &  7,601,990.7  & 2,111.66  &  87.99 \\
+2    &  7,601,990.7  & 2,111.66  &  87.99 \\
+4    &  7,601,990.7  & 2,111.66  &  87.99 \\
+6    &  7,601,990.7  & 2,111.66  &  87.99 \\
+12   &  7,601,981.8  & 2,111.66  &  87.99 \\
+24   &  7,601,433.7  & 2,111.51  &  87.98 \\
+72   &  7,070,893.5  & 1,964.14  &  81.84 \\
+168  &  6,114,455.8  & 1,698.46  &  70.77 \\
+336  &  2,654,817.0  &  737.45   &  30.73\\\bottomrule
+\end{tabular}
+\caption{Period of Mercury's's orbit}
+\label{table:Mercury period data}
+\end{table}
+
+
+For this reason, 6 hours was chosen as an appropriate timestep to simulate the entire Solar System. 
+All planets were added to the programme and the simulation was run for 300 years which produced the plot(s) seen in Figure~\ref{fig:solar system plot}. 
+\begin{figure}[hbt!]
+    \centering
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/unstructured_2_solar_system.pdf}
+        \caption{Simulated trajectory of all planets}
+        \label{fig:all planets solar system plot}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/unstructured_2_terrestrial_planets_only.pdf}
+        \caption{Simulated trajectory of terrestrial planets}
+        \label{fig:terrestrial planets motion}
+    \end{subfigure}
+    \caption{Trajectories of all planets in the Solar System around the Sun}
+    \label{fig:solar system plot}
+\end{figure}
+In this figure it is seen that all planets follow tight, circular orbits which vary by small amounts over the 300 simulated years. 
+The variation between Earth's closest and furthest distance to the Sun is 0.019AU, a 1.9% d  %1.01358−0.99501
+
+
+
+
+
+
+
+.
+
+.
+
+
+kirkwood simulation showing steady orbits.
+
+this because all orbits are circular.
+
+need elliptical orbits.
+
+find this in the results and then fix.
 
 
 
@@ -275,36 +367,19 @@ Inaccuracies in this simulation may originate from sources such as:
 \begin{itemize}
     \item Circular orbits vs. elliptical orbits
     \item No orbital inclination
-    \item Choice of simulation timestep
+    \item Choice of simulation timestep Vs real world simulation time
 \end{itemize}
 
 
 
-\bibliographystyle{dcu}
+\bibliographystyle{abbrvnat}
 \bibliography{report_bibliography.bib}
 
 \section{Use of AI}
+LaTeX formatting
 
 \section{Appendix}
 "An appendix with a printout of your Python program(s)"
-
-\section{layout}
-\begin{itemize}
-    \item Structured work:
-    \begin{itemize}
-        \item Structured(1) - Stationary Sun and moving Earth
-        \item Structured(2) - Track period of Earth's orbit
-        \item Structured(3) - Track period of new planet based off student id number
-    \end{itemize}
-    \item Structured work:
-    \begin{itemize}
-        \item Allow Sun to move due to pull of Earth
-        \item Extend simulation to include all planets of the Solar System
-        \item Allow planets of Solar System to move clockwise and counter-clockwise to view how stability is affected
-        \item Add asteroids to simulation to examine behaviour of Kirkwood gaps 
-    \end{itemize}
-\end{itemize}
-
 
 
 \end{document}

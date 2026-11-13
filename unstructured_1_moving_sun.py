@@ -65,8 +65,8 @@ for i in range(len(body_names)):
     plt.plot(x_positions[:, i]/AU, y_positions[:, i]/AU, label=body_names[i], color=plot_colours[i])
 plt.legend()
 plt.axis('equal')
-plt.xlabel('X (AU)')
-plt.ylabel('Y (AU)')
+plt.xlabel('X (AU)', fontsize=16)
+plt.ylabel('Y (AU)', fontsize=16)
 """
 #create zoomed in plot of sun's orbit
 axins = plt.inset_axes([0.6, 0.6, 0.37, 0.37])   #section of plot to zoom in on

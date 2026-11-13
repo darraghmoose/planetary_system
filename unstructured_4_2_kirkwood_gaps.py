@@ -34,7 +34,7 @@ initial_radii = np.array([0, 5.2*AU, 5.00* AU])
 
 body_names = np.array(["Sun", "Jupiter", "Asteroid"])
 masses = np.array([1.98892e30, 1.89813E27, 0.95E21])
-initial_radii = np.array([0, 5.2*AU, 4.5*AU])
+initial_radii = np.array([0, 7.78479E11, 2.5*AU])
 
 
 #create blank arrays of equal dimensions to store position and velocity data
@@ -75,8 +75,12 @@ for loop in tqdm(range(1, num_steps), ncols=90, ascii=" ░▒█", desc="Astero
 
 
 #print period data in table
-normalised_energy = asteroid_energy/asteroid_energy[0]
-deviation = np.max(normalised_energy, axis=0)
+
+
+
+mean_asteroid_energy = np.mean(asteroid_energy, axis=0)
+normalised_energy = asteroid_energy/mean_asteroid_energy
+deviation = np.max(normalised_energy, axis=0)-1
 
 print(f'Orbital period results:\n')
 print(f'{'Planet':<15}{'Seconds':>15}{'Hours':>15}{'Days':>15}{'Resonance':>15}{'Deviation (%)':>15}')
@@ -91,7 +95,7 @@ for i in range(1, len(body_names)):
         jupiter_period = orbital_period
         print(f'{body_names[i]:<15}{orbital_period:>15,.1f}{orbital_period/3600:>15,.2f}{orbital_period/(3600*24):>15,.2f}{jupiter_period/orbital_period:>15,.3f}{'NA':>15}')
     else:
-        print(f'{body_names[i]:<15}{orbital_period:>15,.1f}{orbital_period/3600:>15,.2f}{orbital_period/(3600*24):>15,.2f}{jupiter_period/orbital_period:>15,.3f}{abs(1-deviation[i-2])*100:15,.1f}')
+        print(f'{body_names[i]:<15}{orbital_period:>15,.1f}{orbital_period/3600:>15,.2f}{orbital_period/(3600*24):>15,.2f}{jupiter_period/orbital_period:>15,.3f}{deviation[i-2]*100:>15,.1f}')
 
 
 #plot orbits of bodies to screen
