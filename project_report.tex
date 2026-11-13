@@ -35,27 +35,39 @@
 
 \begin{document}
 \maketitle
-
 \section{Abstract}
+lorem ipsum dolor\\ \\ \\ \\ \\ \\ \\ \\ 
 
+lorem ipsum dolor \\ \\
+I certify that this submission is my own work, all sources are correctly attributed, and the contribution of any AI technologies is fully acknowledged in section 6. 
+
+
+%-------------------------------------------------------------------------------------------------------------------------------------------------------
 \section{Introduction}
-%Introduction to the area and an 
+%Introduction to the area & overview of the computational problem
+When two bodies interact through Newtonian gravity, the trajectory they follow can be solved analytically. 
+When this system is extended to 3 or more bodies, an analytical solution can be much less suited to making predictions of its behaviour and a 
+numerical solution if often preferred.
+
+The goal of this report is to use python create a simulation of the Solar System in two dimensions. 
+This will be used to predict the orbital periods of the planets which will be compared to empirical data to judger the accuracy of the simulation.
+
+This report will also investigate the nature of the Kirkwood gaps found in the Asteroid Belt. 
+These are regions of the Asteroid Belt which have an unusually low density of asteroids. 
+To explain the origin of these gaps Daniel Kirkwood noted that asteroids that would otherwise inhabit these regions would have an orbital period 
+which is forms a simple ratio with Jupiter's orbital period.\cite{kirkwood_gaps_origin}
+This leads to these asteroids being periodically tugged by Jupiter, knocking them off their orbit and making these regions sparsely inhabited. 
+Modern measurements of bodies in the Asteroid Belt show very clear absences in the Kirkwood gaps as can be seen in Figure~\ref{fig:Kirkwood histogram}. 
 
 \begin{figure}[hbt!]
     \centering
     \includegraphics[width=0.8\textwidth]{images/kirkwood_histogram.pdf}
-    \caption{Histogram of density of asteroids in the Asteroid Belt \citep{kirkwood_gaps_plot}}
+    \caption{Histogram of density of asteroids in the Asteroid Belt \cite{kirkwood_gaps_plot}}
     \label{fig:Kirkwood histogram}
 \end{figure}
 
 
-%overview of the computational problem
-
-
-
-
-
-
+%------------------------------------------------------------------------------------------------------------------------------------------------------- 
 \section{Methods}
 \subsection{Structured Work}
 %Setup of simulation
@@ -75,12 +87,16 @@ In this script the Sun was fixed in place at coordinates (0,0) and the earth was
 relative to the horizontal axis. 
 Though we expect the pull of the Earth to impart an acceleration on the Sun, we are justified in assuming this pull will be negligible as the Sun's mass is far 
 greater than that of the Earth ($\frac{M_{Sun}}{M_{Earth}}\approx\num{3.3e5}$). 
-The Earth was given an initial velocity determined by equation \ref{circular motion velocity}. 
+The Earth was given an initial velocity determined by equation \ref{equation:circular motion velocity}. 
 \begin{equation}
-    \label{circular motion velocity}
-    v=\sqrt{\frac{Gm_{Sun}}{r}}
+    \label{equation:circular motion velocity}
+    v=\sqrt{\frac{Gm_{Sun}}{a}}
 \end{equation}
-where...
+where G is Newtons gravitational constant and a is the semimajor axis of the Earth. 
+It must be noted that this model assumes that the Earth travels in a circular orbit around the Sun. 
+This approximation is valid for this simplified model as Earth has a low eccentricity of only 0.0167 \cite{earth_eccentricity}. 
+
+
 The Runge-Kutta method was used to numerically calculate the updated position and velocity of the Earth after each timestep. 
 The simulation was run for 3 years at a timestep of 12 hours and the position of the Earth was plotted using matplotlib. 
 
@@ -96,7 +112,7 @@ To more accurately determine the moment the Earth crossed the x-axis, a linear i
 \end{equation}
 where $t_1$ was the time after crossing the x-axis, $y_0$ and $y_1$ were the y-coordinates of the Earth before and after the crossing and dt is the timestep used. 
 This method is justified as when considering the Earth's motion over 1 timestep, the Earth's orbit should be well approximated by a straight line.
-The script was run at a range of timesteps (which can be seen in [RESULTS]) and the orbital period was measured. 
+The script was run at a range of timesteps and the orbital period was measured. 
 
 
 %Structured 3 - Simulation of body based on student number
@@ -104,9 +120,9 @@ This programme was tested on a new body, which we will call Erid, whose initial 
 \begin{equation}
     r=0.4+\frac{1054}{25000} AU=0.44216 AU
 \end{equation} 
-Here the digits 1054 were determined from the author's student number. 
-The mass of Erid was assumed to be equal to the Earth's but this assumption should have no effect on the simulation. 
-This is because the acceleration imparted on Erid is independent of the Erid's mass, it only depends on the mass of the Sun. 
+Here the digits 1054 were determined from the report author's student number. 
+The mass of Erid was assumed to be equal to the Earth's but this assumption should have no effect on the simulation as the acceleration imparted on Erid 
+is independent of the Erid's mass. 
 The scripts previously ran on the Earth were ran on Erid to examine its orbit around the Sun and measure it's orbital period. 
 
 
@@ -142,6 +158,7 @@ The positions of all bodies were plotted and the average orbital period of the p
 
 %Unstructured 3 - Measuring energy of the system
 To measure the stability of the system, the kinetic energy of each planet was measured at each timestep. 
+Since we have assumed the planets follow circular orbits, their kinetic energy should remain constant. 
 This was then averaged across the whole simulation to get each planet's mean kinetic energy. 
 The kinetic energy of each planet across the simulation was divided by its respective mean. 
 This scales the mean kinetic energy of each planet to 1 which gives a useful metric for measuring kinetic energy deviation. 
@@ -149,23 +166,31 @@ The simulation was modified to calculate the greatest deviation in kinetic energ
 
 
 %Unstructured 4 - Kirkwood gaps (finding resonant radii)
-The Kirkwood gaps in the Solar system lie in the Asteroid Belt, between Mars and Jupiter. 
-Their existence is a consequence of the resonance of their orbital period with Jupiter's orbit. 
-To investigate how this simulation reflects this behaviour, a system consisting only of the Sun, Jupiter and an asteroid within the Asteroid Belt was considered. 
-(some of above may be put into intro)
-
-[CONSIDERING CHANGING TO USE SIM TO FIND RESONANCES FIRST AND THEN EXAMINE GAPS?]
+To investigate how this simulation predicts the behaviour of asteroids at the Kirkwood gaps, we utilise Kepler's third Law 
+\begin{equation}
+    T^2\propto a^3
+\end{equation}
+where $T$ is the period of a body's orbit and $a$ is its semimajor axis.
+This can be rearranged to predict where we are expected to find the Kirkwood gaps.
+\begin{equation}
+    a_{asteroid}=a_{Jupiter}(\frac{T_{asteroid}}{T_{Jupiter}})^{\frac{2}{3}}
+    \label{equation: radii of kirkwood gaps}
+\end{equation}
 
 A script was written to simulate the motion of asteroids at a range of radii within the Asteroid Belt (2.0AU - 3.3AU) with separations of $\Delta r=0.05AU$.
 These simulations were run consecutively to prevent nearby asteroids from interfering with each other. 
-Though this does happen in the Asteroid Belt, the aim of this script was to examine Jupiter's impact of their orbital stability and so it was decided it was best 
-to simulate the asteroids' behaviour consecutively. 
 This script aimed measure the orbital period of these asteroids and compared it to Jupiter's period to calculate the ratio of their orbits. 
-Where these orbital ratios are simple, whole number ratios, it is expected that the Kirkwood gaps are located here. 
+This was used to find orbital periods which formed simple ratios to Jupiter's period. 
+Here we expected to find the Kirkwood gaps  
+
+
 %Actually measuring their instability
+To examine the behaviour of an asteroid which occupies a Kirkwood gap a script was written consisting of three bodies: The Sun, Jupiter and an asteroid. 
+The asteroid was placed in a circular orbit around the Sun with velocity given by Equation~\ref{equation:circular motion velocity}. 
+The simulation was set to run  
 
 
-
+%-------------------------------------------------------------------------------------------------------------------------------------------------------
 \section{Results}
 \subsection{Structured Results}
 %Structured 1 & 2
@@ -266,6 +291,7 @@ Timestep (Hours) & Period (Seconds) & Period (Hours) & Period (Earth Days) \\ \m
 %Sun allowed to move, zoom in on just its motion as well as unaffected Earth period
 The first unstructured change was to allow the Sun to move under the gravitational pull of the Earth. 
 Figure~\ref{fig:moving sun binary orbits} shows how the trajectories of the Earth and Sun are affected. 
+%Plot of sun's motion now its free
 \begin{figure}[hbt!]
     \centering
     \begin{subfigure}[b]{0.48\textwidth}
@@ -298,6 +324,7 @@ With respect to the size of the Sun itself, its motion due to Earth's pull is al
 To select a suitable timestep to simulate all planets of the Solar System, Mercury's motion around the Sun was simulated at a range of timesteps 
 and its period was measured. The result of this simulation can be seen in Table~\ref{table:Mercury period data}. 
 From these results no improvement is seen beyond a timestep of 6 hours. 
+%Mercury periods table
 \begin{table}[hbt!]
 \centering
 \begin{tabular}{@{}lllll@{}}
@@ -317,9 +344,9 @@ Timestep (Hours) & Period (Seconds) & Period (Hours) & Period (Earth Days) \\ \m
 \label{table:Mercury period data}
 \end{table}
 
-
 For this reason, 6 hours was chosen as an appropriate timestep to simulate the entire Solar System. 
 All planets were added to the programme and the simulation was run for 300 years which produced the plot(s) seen in Figure~\ref{fig:solar system plot}. 
+%Plot of entire solar system trajectory
 \begin{figure}[hbt!]
     \centering
     \begin{subfigure}[b]{0.48\textwidth}
@@ -338,8 +365,76 @@ All planets were added to the programme and the simulation was run for 300 years
     \caption{Trajectories of all planets in the Solar System around the Sun}
     \label{fig:solar system plot}
 \end{figure}
-In this figure it is seen that all planets follow tight, circular orbits which vary by small amounts over the 300 simulated years. 
-The variation between Earth's closest and furthest distance to the Sun is 0.019AU, a 1.9% d  %1.01358−0.99501
+
+%Figure of terrestrial only planet KE stability
+\begin{figure}[hbt!]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/unstructured_3_1_terrestrial_only_energy.pdf}
+    \caption{Kinetic energy of only the terrestrial planets in orbit. }
+    \label{fig:terrestrial planets only KE}
+\end{figure}
+
+%Kinetic energy plots with all planets
+\begin{figure}[hbt!]
+    \centering
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/unstructured_3_terrestrial_body_energy_subplot.pdf}
+        \caption{Simulated kinetic energy of the terrestrial planets}
+        \label{fig:terrestrial planets kinetic energy}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/unstructured_3_gaseous_planet_stability.pdf}
+        \caption{Simulated kinetic energy of the gaseous planets}
+        \label{fig:gaseous planets kinetic energy}
+    \end{subfigure}
+    \caption{Trajectories of all planets in the Solar System around the Sun}
+    \label{fig:solar system kinetic energy plot}
+\end{figure}
+
+In this figure it is seen that all planets follow tight, circular orbits which vary by small amounts over the 300 simulated years.
+
+%Unstructured 3 - measuring instability and kinetic energy 
+To quantify the stability of these orbits, their kinetic energy was tracked throughout the simulation.
+First only the terrestrial planets were simulated for 100 years. 
+A graph of their kinetic energy over the course of the simulation can be seen in Figure~\ref{fig:terrestrial planets only KE}.
+From the figure it is seen that the kinetic energy of the planets varies by a very small amount. 
+The greatest deviation in kinetic energy was seen in Venus which only varies by 0.01\%. 
+
+By adding the gas giants to the simulation and plotting the kinetic energy of all planets, Figure~\ref{fig:solar system kinetic energy plot} was generated. 
+A noticeable change was seen in the terrestrial planets where they now oscillate with a period of (11.??) years. 
+This oscillation coincides [how well] with Jupiter's period which in this run was 11.?? years. 
+This effect is a consequence of Jupiter's very large mass (\num{1.9e27}Kg), which can be enough to shift the centre of mass of the Solar system beyond 
+the surface of the Sun. 
+This behaviour is reflective of the real Solar System where Jupiter's orbit causes the inner, terrestrial planets to 'slosh' about the Sun in time with 
+its orbit. [REFERENCE HERE]
+Jupiter also had the greatest deviation in kinetic energy among all the planets of $\Delta KE=0.3\%$. 
+The [small size] of this value is evidence to support the accuracy of this simulation. 
+
+
+%Examination of kirkwood gaps
+To locate the radii where the Kirkwood gaps are expected, asteroids were simulated at radii of 2.0AU - 3.4AU at intervals of $\Delta r=0.01AU$.
+The period of these asteroids were measured and compared to Jupiter's period to find their orbital ratios. 
+This was compared to the predicted radii of these gaps given by equation~\ref{equation: radii of kirkwood gaps}
+The ratios corresponding to the primary Kirkwood gaps 
+isolate simple orbital ratios which can be seen in Table~\ref{table:orbital resonance asteroids}
+
+%THIS TABLE IS YET TO BE COMPLETED!!!!
+\begin{table}[hbt!]
+\centering
+\begin{tabular}{@{}lllll@{}}
+\toprule
+Orbital Resonance \\ (Asteroid : Jupiter) & Expected Radius (AU) & Simulated Radius (AU) & Simulated Resonance\\ \midrule
+3:1    &  2.50 & 2.50 & 3.002:1 \\
+5:2    &  2.82 & [TBC] & \\
+7:3    &  2.96 & [TBC] & \\
+2:1    &  3.28 & [TBC] & \\ \bottomrule
+\end{tabular}
+\caption{Radii of asteroids which display orbital resonance with Jupiter}
+\label{table:orbital resonance asteroids}
+\end{table}
 
 
 
@@ -347,22 +442,14 @@ The variation between Earth's closest and furthest distance to the Sun is 0.019A
 
 
 
-.
-
-.
 
 
-kirkwood simulation showing steady orbits.
-
-this because all orbits are circular.
-
-need elliptical orbits.
-
-find this in the results and then fix.
-
-
-
+%-------------------------------------------------------------------------------------------------------------------------------------------------------
 \section{Conclusion}
+Reflection on accuracy of predictions made by code
+
+Highlight inaccuracies in simulation
+
 Inaccuracies in this simulation may originate from sources such as:
 \begin{itemize}
     \item Circular orbits vs. elliptical orbits
@@ -371,15 +458,18 @@ Inaccuracies in this simulation may originate from sources such as:
 \end{itemize}
 
 
+%-------------------------------------------------------------------------------------------------------------------------------------------------------
+\section{Use of AI}
+LaTeX formatting
 
 \bibliographystyle{abbrvnat}
 \bibliography{report_bibliography.bib}
 
-\section{Use of AI}
-LaTeX formatting
 
-\section{Appendix}
-"An appendix with a printout of your Python program(s)"
+%-------------------------------------------------------------------------------------------------------------------------------------------------------
+\section*{Appendix}
+The simulations used in this project were all written in python and this report was created using LaTeX. 
+
 
 
 \end{document}

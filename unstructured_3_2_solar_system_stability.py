@@ -17,7 +17,7 @@ initial_radii = np.array([0, 5.7909227E10 , 1.08209475E11, 1.495978707e11, 2.279
 plot_colours = ['#ef0000', '#8c8987', '#dfb18c', '#3c6690', '#ff6b4d', '#c98226', '#f8d280', '#5d8b8e', '#4e5a74', '#5d8b8e']
 
 timestep = 12 * 3600 #simulation time in seconds per timestep
-num_steps = 4 * (365 * 24)
+num_steps = 100 * (365 * 2)
 
 #create blank arrays of equal dimensions to store position and velocity data
 x_positions = np.zeros((num_steps,len(body_names))); y_positions = np.zeros((num_steps,len(body_names)))
@@ -61,7 +61,7 @@ for loop in tqdm(range(1, num_steps), ncols=90, ascii=" ░▒█", desc="Runnin
 
 #print period data in table
 print(f'Orbital period results:\n')
-print(f'{'Planet':<12}{'Seconds':>15}{'Hours':>15}{'Days':>15}{'KE Deviation(%)':>18}')
+print(f'{'Planet':<12}{'Seconds':>15}{'Hours':>15}{'Days':>15}{'Years (365.25 days)':>15}{'KE Deviation(%)':>18}')
 print(f'---------------------------------------------------------------------------')
 mean_planet_kinetic_energy = np.mean(planet_kinetic_energy, axis=0) #mean of column (planet) in array
 normalised_planet_energy = planet_kinetic_energy/mean_planet_kinetic_energy
@@ -74,7 +74,7 @@ for i in range(1, len(body_names)):
     
     #print(normalised_planet_energy[i])
     greatest_deviation = np.max(abs(normalised_planet_energy-1), axis=0)
-    print(f'{body_names[i]:<12}{orbital_period:>15,.1f}{orbital_period/3600:>15,.2f}{orbital_period/(3600*24):>15,.2f}{greatest_deviation[i-1]*100:>18,.2f}')
+    print(f'{body_names[i]:<12}{orbital_period:>15,.1f}{orbital_period/3600:>15,.2f}{orbital_period/(3600*24):>15,.2f}{orbital_period/(3600*24*365.25):>15,.2f}{greatest_deviation[i-1]*100:>18,.2f}')
 
 
 #for very large simulations check if plotting is wanted
@@ -87,7 +87,7 @@ if show_plot == 'y':
     plt.figure(1, figsize=(7, 7))
     for i in range(len(body_names)):
         plt.plot(x_positions[:, i]/AU, y_positions[:, i]/AU, label=body_names[i], color=plot_colours[i])
-    plt.legend()
+    plt.legend(loc="upper right")
     plt.axis('equal')
     plt.xlabel('X (AU)')
     plt.ylabel('Y (AU)')
@@ -95,25 +95,26 @@ if show_plot == 'y':
 
     #create normalised plot of planet energy
     #terrestrial planets
-    plt.figure(2, figsize=(8, 6))
+    fig2 = plt.figure(2, figsize=(8, 6))
     for planet in range(1, 5):
         plt.subplot(2, 2, planet)
-        plt.plot(np.linspace(0, timestep*num_steps, num=num_steps), normalised_planet_energy[:, planet-1], label=body_names[planet], color=plot_colours[planet])
+        plt.plot(np.linspace(0, timestep*num_steps, num=num_steps)/(3600*24*365.25), normalised_planet_energy[:, planet-1], label=body_names[planet], color=plot_colours[planet])
         plt.legend()
-    plt.suptitle("Terrestrial Planets Stability")
-    plt.ylabel('Normalised Kinetic Energy')
-    plt.xlabel('Time')
-    plt.savefig("images/unstructured_3_terrestrial_body_energy_subplot.pdf")
+    fig2.suptitle("Terrestrial Planets Stability")
+    fig2.supxlabel('Time (seconds)')
+    fig2.supylabel('Normalised Kinetic Energy')
+    fig2.tight_layout()
+    plt.savefig("images/unstructured_3_2_terrestrial_body_energy_subplot.pdf")
 
     #gas giants
-    plt.figure(3, figsize=(8, 6))
-    plt.title("Normalised Gaseous Planet Orbit Stability")
+    fig3 = plt.figure(3, figsize=(8, 6))
     for planet in range(5, 9):
         plt.subplot(2, 2, planet-4)
-        plt.plot(np.linspace(0, timestep*num_steps, num=num_steps), normalised_planet_energy[:, planet-1], label=body_names[planet], color=plot_colours[planet])
+        plt.plot(np.linspace(0, timestep*num_steps, num=num_steps)/(3600*24*365.25), normalised_planet_energy[:, planet-1], label=body_names[planet], color=plot_colours[planet])
         plt.legend()
-    plt.ylabel('Normalised Kinetic Energy')
-    plt.xlabel('Time')
-    plt.legend()
-    plt.savefig("images/unstructured_3_gaseous_planet_stability.pdf")
+    fig3.suptitle("Gaseous Planets Stability")
+    fig3.supxlabel('Time (seconds)')
+    fig3.supylabel('Normalised Kinetic Energy')
+    fig3.tight_layout()
+    plt.savefig("images/unstructured_3_2_gaseous_planet_stability.pdf")
     plt.show()
