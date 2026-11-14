@@ -38,9 +38,9 @@ def elliptical_initial_velocity(x_start, y_start, eccentricity):
     semimajor_axis = np.sqrt(x_start**2 + y_start**2)
 
     for i in range(len(semimajor_axis)):
-        if semimajor_axis[i] == 0: #ignore the sun initially, it is later given velocity to give system momentum = 0
+        if semimajor_axis[i] == 0.0: #ignore the sun initially, it is later given velocity to give system momentum = 0
             continue
-        speed = np.sqrt((G*sun_mass*(1-eccentricity))/(semimajor_axis*(1+eccentricity)))
+        speed = np.sqrt((G*sun_mass*(1-eccentricity[i]))/(semimajor_axis[i]*(1+eccentricity[i])))
         initial_x_velocity[i] = speed * y_start[i] / semimajor_axis[i]
         initial_y_velocity[i] = -speed * x_start[i] / semimajor_axis[i]
     

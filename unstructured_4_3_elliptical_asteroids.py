@@ -21,6 +21,7 @@ body_names = np.array(["Sun", "Jupiter", "Asteroid"])
 masses = np.array([1.98892e30, 1.89813E27, 0.95E21])
 Jupiter_radius = 7.78479E11
 kirkwood_radii = [2.5*AU, 2.83*AU, 2.96*AU, 3.28*AU]
+eccentricities = np.array([1, 1, 0.95])
 
 def main_simulation(asteroid_radius: float):
     """Simulates the Sun, Jupiter and a single asteroid starting at asteroid_radius.
@@ -34,7 +35,7 @@ def main_simulation(asteroid_radius: float):
 
     #initialise position and velocity of all bodies surrounding the sun
     x_positions[0], y_positions[0] = initial_positions(initial_radii)
-    x_velocities[0], y_velocities[0] = elliptical_initial_velocity(x_positions[0], y_positions[0], masses)
+    x_velocities[0], y_velocities[0] = elliptical_initial_velocity(x_positions[0], y_positions[0], eccentricities)
 
     #initialise velocity of sun to give system zero net momentum
     x_velocities[0, 0] = -np.sum(masses[1:] * x_velocities[0, 1:]) / masses[0]

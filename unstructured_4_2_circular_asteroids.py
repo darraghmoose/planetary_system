@@ -21,7 +21,6 @@ body_names = np.array(["Sun", "Jupiter", "Asteroid"])
 masses = np.array([1.98892e30, 1.89813E27, 0.95E21])
 Jupiter_radius = 7.78479E11
 kirkwood_radii = [2.5*AU, 2.83*AU, 2.96*AU, 3.28*AU]
-eccentricities = np.array([1, 1, 0.95])
 
 def main_simulation(asteroid_radius: float):
     """Simulates the Sun, Jupiter and a single asteroid starting at asteroid_radius.
