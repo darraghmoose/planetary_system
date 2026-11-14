@@ -75,9 +75,6 @@ for loop in tqdm(range(1, num_steps), ncols=90, ascii=" ░▒█", desc="Astero
 
 
 #print period data in table
-
-
-
 mean_asteroid_energy = np.mean(asteroid_energy, axis=0)
 normalised_energy = asteroid_energy/mean_asteroid_energy
 deviation = np.max(normalised_energy, axis=0)-1

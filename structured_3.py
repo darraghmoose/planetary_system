@@ -79,7 +79,7 @@ def unstructured3_1():
         else:
             plt.plot(x_positions[:, i]/AU, y_positions[:, i]/AU, color=plot_colours[i], label=body_names[i])
     plt.axis('equal')
-    plt.xlabel('X TESTING(AU)')
+    plt.xlabel('X (AU)')
     plt.ylabel('Y (AU)')
     plt.legend()
     plt.savefig("images/structured3.pdf")
@@ -103,8 +103,3 @@ def unstructured3_2():
 if __name__=="__main__":
     unstructured3_1()
     unstructured3_2()
-
-"""
-TODO
-Tidy run_simulation() to be passed into unstructured2_1() also
-"""

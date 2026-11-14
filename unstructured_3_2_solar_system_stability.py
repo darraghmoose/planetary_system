@@ -17,7 +17,7 @@ initial_radii = np.array([0, 5.7909227E10 , 1.08209475E11, 1.495978707e11, 2.279
 plot_colours = ['#ef0000', '#8c8987', '#dfb18c', '#3c6690', '#ff6b4d', '#c98226', '#f8d280', '#5d8b8e', '#4e5a74', '#5d8b8e']
 
 timestep = 12 * 3600 #simulation time in seconds per timestep
-num_steps = 100 * (365 * 2)
+num_steps = 300 * (365 * 2)
 
 #create blank arrays of equal dimensions to store position and velocity data
 x_positions = np.zeros((num_steps,len(body_names))); y_positions = np.zeros((num_steps,len(body_names)))
@@ -101,8 +101,8 @@ if show_plot == 'y':
         plt.plot(np.linspace(0, timestep*num_steps, num=num_steps)/(3600*24*365.25), normalised_planet_energy[:, planet-1], label=body_names[planet], color=plot_colours[planet])
         plt.legend()
     fig2.suptitle("Terrestrial Planets Stability")
-    fig2.supxlabel('Time (seconds)')
-    fig2.supylabel('Normalised Kinetic Energy')
+    fig2.supxlabel('Time (seconds)', fontsize=16)
+    fig2.supylabel('Normalised Kinetic Energy', fontsize=16)
     fig2.tight_layout()
     plt.savefig("images/unstructured_3_2_terrestrial_body_energy_subplot.pdf")
 
@@ -113,8 +113,8 @@ if show_plot == 'y':
         plt.plot(np.linspace(0, timestep*num_steps, num=num_steps)/(3600*24*365.25), normalised_planet_energy[:, planet-1], label=body_names[planet], color=plot_colours[planet])
         plt.legend()
     fig3.suptitle("Gaseous Planets Stability")
-    fig3.supxlabel('Time (seconds)')
-    fig3.supylabel('Normalised Kinetic Energy')
+    fig3.supxlabel('Time (seconds)', fontsize=16)
+    fig3.supylabel('Normalised Kinetic Energy', fontsize=16)
     fig3.tight_layout()
     plt.savefig("images/unstructured_3_2_gaseous_planet_stability.pdf")
     plt.show()

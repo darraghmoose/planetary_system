@@ -23,6 +23,9 @@ def asteroid_stability_simulation(target_radii):
     simulation_asteroid_energies = [[] for i in range(len(target_radii))]; simulation_asteroid_deviations = [[] for i in range(len(target_radii))]
     simulation_asteroid_crossings = [[] for i in range(len(target_radii))]; simulation_jupiter_crossings = [[] for i in range(len(target_radii))]
 
+    #single progress bar covering every timestep of every asteroid
+    progress = tqdm(total=len(target_radii) * (num_steps - 1), ncols=90, ascii=" ░▒█", desc='Simulation Running', colour="#00bb82")
+
     for i in range(len(target_radii)):
         initial_radii = np.array([0, 7.78479E11, target_radii[i]])
 
@@ -43,7 +46,7 @@ def asteroid_stability_simulation(target_radii):
         body_energy[0] = kinetic_energy(masses[0:], x_velocities[0][0:], y_velocities[0][0:])
         
         crossings = [[] for j in range(len(body_names)-1)] 
-        for loop in tqdm(range(1, num_steps), ncols=90, ascii=" ░▒█", desc=f'Asteroid {i+1}/{len(target_radii)}', colour="#00bb82"):  #" ░▒█" -- " ▖▘▝▗▚▞█"
+        for loop in range(1, num_steps):
             x_positions[loop], y_positions[loop], x_velocities[loop], y_velocities[loop] = body_update(x_positions[loop-1], y_positions[loop-1], x_velocities[loop-1], y_velocities[:][loop-1], timestep, masses)
             #Measure asteroid KE to gague orbit stability
             body_energy[loop] = kinetic_energy(masses[:len(masses)], x_velocities[loop][:len(masses)], y_velocities[loop][:len(masses)])
@@ -61,6 +64,9 @@ def asteroid_stability_simulation(target_radii):
                     crossing_time = time_after - (y_coord_now)*(timestep / (y_coord_now - y_coor_prev))
                     crossings[planet-1].append(crossing_time)
 
+            if loop % 100 == 0:
+                progress.update(100)
+
         #calculate energy deviation
         normalised_energy = body_energy/np.mean(body_energy, axis=0)
         energy_deviation = np.max(np.abs(normalised_energy-1), axis=0)
@@ -72,14 +78,16 @@ def asteroid_stability_simulation(target_radii):
         simulation_asteroid_deviations[i] = energy_deviation[2]
         simulation_asteroid_crossings[i] = crossings[1]
         simulation_jupiter_crossings[i] = crossings[0]
-
+    
+    progress.update(progress.total - progress.n)
+    progress.close()
     return simulation_asteroid_x_positions, simulation_asteroid_y_positions, simulation_asteroid_energies, simulation_asteroid_deviations, simulation_asteroid_crossings, simulation_jupiter_crossings
 
 #simulation parameters
 timestep = 24 * 3600    #24 hours is accurate enough for mars and so also asteroid belt.  
 num_steps = 50 * (365)  #runtime in years
-start_radius = 2.4 *AU
-end_radius = 2.6 * AU
+start_radius = 3.2 *AU
+end_radius = 3.4 * AU
 radius_increment = 0.01 * AU
 num_asteroids = int((end_radius-start_radius)/radius_increment +1)
 target_radii = np.linspace(start_radius, end_radius, num_asteroids) #if want to simulate only certain radii, replace target_radii with list of desired radii

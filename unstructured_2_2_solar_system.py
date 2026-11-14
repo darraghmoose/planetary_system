@@ -69,8 +69,9 @@ if show_plot == 'y':
         plt.plot(x_positions[:, i]/AU, y_positions[:, i]/AU, label=body_names[i], color=plot_colours[i])
     plt.legend(loc="upper right")
     plt.axis('equal')
-    plt.xlabel('X (AU)')
-    plt.ylabel('Y (AU)')
+    plt.xlabel('X (AU)', fontsize=16)
+    plt.ylabel('Y (AU)', fontsize=16)
+    plt.tight_layout()
     plt.savefig("images/unstructured_2_solar_system.pdf")
 
     plt.xlim(-1.6, 1.6)
