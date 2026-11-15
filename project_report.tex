@@ -28,16 +28,32 @@
 %     if y_coord_prev * y_coord_now < 0 and x_coord_now > 0:
 % \end{lstlisting}
 
-\title{Simulation of the Motion of Astronomical Bodies}
+\title{Simulation of the Motion of Astronomical Bodies in the Solar System and Examination of the Kirkwood Gaps in the Asteroid Belt}
 \author{Darragh Morrissey - 40451054}
+\date{}
 
 \begin{document}
 \maketitle
 \section{Abstract}
-lorem ipsum dolor\\ \\ \\ \\ \\ \\ \\ \\ 
+%1 - Current state of understanding
+%2 - What issue is still unresolved
+%3 - What is the main focus of the work
+%4 - What techniques are used to advance understanding
+%5 - Main findings of research
+%6 - New hypothesis created by this work
+The N-body problem is the problem of predicting the motion of 3 or more bodies when they are gravitationally attracted to each other. 
+The trajectory of a particular body is highly sensitive to the initial conditions of the system which often makes an analytical solution impractical. 
+In this project a computer simulation is created using python to predict the motion of the bodies in the Solar System and examine the Kirkwood gaps in 
+the Asteroid Belt. 
+This simulation was able to predict the orbital periods of the planets to an accuracy of $<0.1\%$ except for Neptune which was simulated to an accuracy of $1.6\%$.
+The kinetic energy of each planet was measured which revealed the effect of Jupiter's orbit on the terrestrial planets, where their orbits tend to `slosh' 
+in time with Jupiter. 
+Asteroids were simulated in the Kirkwood gaps of the Asteroid Belt and erratic changes in their eccentricity were seen. 
+This was seen as evidence of orbital instability. 
+Asteroids simulated in known stable orbits changed eccentricity very gradually 
 
-lorem ipsum dolor \\ \\
-I certify that this submission is my own work, all sources are correctly attributed, and the contribution of any AI technologies is fully acknowledged in section 6. 
+I certify that this submission is my own work, all sources are correctly attributed, and the contribution of any AI technologies is fully acknowledged in 
+Section~\ref{Use of AI}. 
 
 
 %-------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -48,23 +64,14 @@ When this system is extended to 3 or more bodies, an analytical solution can be 
 numerical solution if often preferred.
 
 The goal of this report is to use python to implement a numerical solution which will simulate the behaviour of the Solar System. 
-This will be used to predict the orbital periods of the planets which will be compared to empirical data to judger the accuracy of the simulation.
+This will be used to predict the orbital periods of the planets which will be compared to empirical data to judge the accuracy of the simulation.
 
 This report will also investigate the nature of the Kirkwood gaps found in the Asteroid Belt.
-These are regions of the Asteroid Belt which have a noticeably low density of asteroids. 
+These are regions which have a noticeably lower density of asteroids than nearby regions. 
 To explain the origin of these gaps Daniel Kirkwood noted that asteroids that would otherwise inhabit these regions would have an orbital period 
-which forms a simple ratio with Jupiter's orbital period.\cite{kirkwood_gaps_origin}
+which forms a simple ratio with Jupiter's orbital period such as 2:1 or 5:2\cite{kirkwood_gaps_origin}.
 This leads to these asteroids being periodically tugged by Jupiter, knocking them off their orbit and making these regions sparsely inhabited. 
 Modern measurements of bodies in the Asteroid Belt show very clear absences in the Kirkwood gaps as can be seen in Figure~\ref{fig:Kirkwood histogram}. 
-
-In the simulation, all motion is assumed to take place entirely in the x-y plane and planets are treated as point like objects subject to Newton's law of 
-universal gravitation. 
-It was decided that the Runge-Kutta method would be used to update the positions and velocities of all bodies in the system. 
-This method was chosen as it is highly effective in solving differential equations and outperforms other numerical methods such as Euler's method or 
-the Euler-Cromer method.
-Numpy arrays were used to track key variables in the simulation, such as positions, velocities and masses of all bodies. 
-These were chosen as they are optimised for fast operations and vectorisation, making them more efficient than python lists \cite{numpy_efficiency}. 
-
 
 \begin{figure}[hbt!]
     \centering
@@ -74,16 +81,25 @@ These were chosen as they are optimised for fast operations and vectorisation, m
 \end{figure}
 
 
+In the simulation, all motion is assumed to take place entirely in the x-y plane and planets are treated as point like objects subject to Newton's law of 
+universal gravitation. 
+It was decided that the Runge-Kutta method would be used to update the positions and velocities of all bodies in the system. 
+This method was chosen as it is highly effective in solving differential equations and outperforms other numerical methods such as Euler's method or 
+the Euler-Cromer method.
+Numpy arrays were used to track key variables in the simulation, such as positions, velocities and masses of all bodies. 
+These were chosen as they are optimised for fast operations and vectorisation\cite{numpy_efficiency}. 
+
+
 %------------------------------------------------------------------------------------------------------------------------------------------------------- 
 \section{Methods}
 \subsection{Structured Work}
 %Unstructured 1 - Earth moving around Sun
 The first script written aimed to simulate the motion of the Earth in orbit around the Sun. 
-In this script the Sun was fixed in place at coordinates (0,0) and the earth was set 1 AU = $\num{1.495978707e11}$m away from the Sun at an random angle 
+In this script the Sun was fixed at the coordinates (0,0) and the earth was set 1 AU = $\num{1.495978707e11}$m away from the Sun at an random angle 
 relative to the horizontal axis. 
 Though we expect the pull of the Earth to impart an acceleration on the Sun, we are justified in assuming this pull will be negligible as the Sun's mass 
-is far greater than that of the Earth ($\frac{M_{Sun}}{M_{Earth}}\approx\num{3.3e5}$). 
-The Earth was given an initial velocity determined by equation \ref{equation:circular motion velocity}. 
+is far greater than that of the Earth ($\frac{M_{Sun}}{M_{Earth}}\approx\num{3e5}$). 
+The Earth was given an initial velocity tangent to the Sun determined by equation~\ref{equation:circular motion velocity}. 
 \begin{equation}
     \label{equation:circular motion velocity}
     v=\sqrt{\frac{Gm_{Sun}}{a}}
@@ -91,7 +107,7 @@ The Earth was given an initial velocity determined by equation \ref{equation:cir
 where G is Newtons gravitational constant and $a$ is the semimajor axis of the Earth. 
 It must be noted that this model assumes that the Earth travels in a circular orbit around the Sun. 
 This approximation is valid for this simple model as Earth has a low eccentricity of only 0.0167 \cite{earth_eccentricity}. 
-The simulation was run for 3 years at a timestep of 12 hours and the position of the Earth was plotted using matplotlib. 
+The simulation was run for 5 years at a timestep of 12 hours and the position of the Earth was plotted using matplotlib. 
 
 
 %Structured 2 - Measuring Earth's Period
@@ -103,8 +119,8 @@ To accurately determine the moment the Earth crossed the x-axis, a linear interp
 \begin{equation}
     t=t_1-\frac{y_1}{y_1-y_0}dt
 \end{equation}
-where $t_1$ was the time after crossing the x-axis, $y_0$ and $y_1$ were the y-coordinates of the Earth before and after the crossing and dt is the timestep used. 
-This method is justified as when considering the Earth's motion over 1 timestep, the Earth's orbit should be well approximated by a straight line.
+where $t_1$ was the time after crossing the x-axis, $y_0$ and $y_1$ were the y-coordinates of the Earth before and after the crossing respectively, and dt is the timestep used. 
+This method is justified as when considering the Earth's motion over 1 timestep, it should be well approximated by a straight line.
 The script was run at a range of timesteps and the orbital period was measured. 
 
 
@@ -116,13 +132,13 @@ This programme was tested on a new body, which we will call Erid, whose initial 
 Here the digits 1054 were determined from the report author's student number. 
 The mass of Erid was assumed to be equal to the Earth's but this assumption should have no effect on the simulation as the acceleration imparted on Erid 
 is independent of its mass. 
-The scripts previously ran on the Earth were ran on Erid to plot its orbit around the Sun and measure it's orbital period. 
+The orbital period of this planet was measured using the same method described for Earth.
 
 
 \subsection{Unstructured Work}
 %Unstructured 1 - Moving Sun
 The first unstructured modification made to the simulation was to allow the Sun to move from its initial position at (0,0). 
-This change was made as this is more reflective of how our Solar System actually behaves. 
+This change gives a more reflective of our Solar System's behaviour in real life. 
 Since the simulation is already written to store all position and velocity data in numpy arrays, only the dimension on these arrays needed to be increased
 to track the behaviour of both bodies. 
 The updated simulation was run on a system consisting of the Sun and Earth. 
@@ -133,29 +149,26 @@ The trajectory of both bodies and the period of Earth's orbit was recorded.
 Next it was decided to add all other planets of the Solar System to the simulation. 
 This change can be made similarly to the previous modification where the dimensions of the arrays describing position and velocity need to be increased. 
 To determine an appropriate timestep for this part of the simulation, the orbital period of Mercury was simulated at a range of timesteps.
-By noting the timestep where the period seemed to converge to a constant value, an appropriate timestep was chosen.  
+By noting the timestep where the period seemed to converge to a constant value, That value was taken to be an appropriate timestep.  
 
 
 %Unstructured 2-2 Adding all planets
-At the start of the simulation all bodies are placed a distance of their semimajor axis away from the Sun[REFERENCE] at random angles relative to 
-the horizontal axis. 
-The decision was made to start all planets at random angles was made as alternative to starting all planets on the x-axis. 
-Starting the planets all aligned is a very [specific/ordered] state of the system and not reflective of the average state of the system. 
+At the start of the simulation all bodies are placed a distance of their semimajor axis\cite{planets_data} from the Sun at random angles relative to 
+the horizontal axis with tangential velocities given by equation~\ref{equation:circular motion velocity}. 
+The decision to start all planets at random angles was made as alternative to starting all planets in a specific orientation such as all on the x-axis. 
+Starting the planets all aligned is a very specific and ordered state of the system, which may not be reflective of the average state or behaviour of the system. 
 Typically the planets are scattered around the Sun, some close together, some far apart. 
-By initialising the system at random angles like this, we start at a more typical state and expect to make more accurate predictions of the system. 
-
-
-The simulation was run at a timestep of () for (). 
-The positions of all bodies were plotted and the average orbital period of the planets was recorded. 
+By initialising the system at random angles in this manner, we start at a more typical state and expect to see more accurate predictions of the system. 
+When the simulation was run, the positions of all bodies were plotted and the average orbital period of the planets was recorded. 
 
 
 %Unstructured 3 - Measuring energy of the system
 To measure the stability of the system, the kinetic energy of each planet was measured at each timestep. 
 Since we have assumed the planets follow circular orbits, their kinetic energy should remain constant. 
-This was then averaged across the whole simulation to get each planet's mean kinetic energy. 
+This was then averaged across time to get each planet's mean kinetic energy. 
 The kinetic energy of each planet across the simulation was divided by its respective mean. 
 This scales the mean kinetic energy of each planet to 1 which gives a useful metric for measuring kinetic energy deviation. 
-The simulation was modified to calculate the greatest deviation in kinetic energy for each planet and plot the kinetic energy of all planets over time. 
+The simulation was modified to measure the kinetic energy of all planets over time and calculate the greatest deviation in kinetic energy for each planet. 
 
 
 %Unstructured 4 - Kirkwood gaps (finding resonant radii)
@@ -174,14 +187,14 @@ A script was written to simulate the motion of asteroids of mass $\num{0.95e21}$
 separations of $\Delta r=0.05AU$.
 These simulations were run consecutively to prevent nearby asteroids from interfering with each other. 
 This script aimed measure the orbital period of these asteroids and compared it to Jupiter's period to calculate the ratio of their orbits. 
-This was used to find orbital periods which formed simple ratios to Jupiter's period. 
-Here we expected to find the Kirkwood gaps  
+This was used to find orbital radii whose period formed simple ratios to Jupiter's period. 
+Here we expect to find the Kirkwood gaps  
 
 
 %Actually measuring their instability
 To examine the behaviour of an asteroid which occupies a Kirkwood gap a script was written consisting of three bodies: The Sun, Jupiter and an asteroid. 
 The asteroid was placed in a circular orbit around the Sun with velocity given by Equation~\ref{equation:circular motion velocity}. 
-The simulation was set to run for () with a timestep of 24 hours. 
+The simulation was set to run for 200 years with a timestep of 72 hours. [RERUN TO FIX GRAPH]
 
 
 %-------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -191,6 +204,8 @@ The simulation was set to run for () with a timestep of 24 hours.
 Figure~\ref{fig:Earth orbiting fixed sun} shows the calculated orbit of Earth around the Sun when the Sun is fixed at the coordinates (0,0). 
 In this figure the simulation was run for 5 years at a timestep of 12 hours. 
 Earth is seen to maintain a circular orbit around the Sun. 
+The orbit's period was measured at an array of timesteps ranging from 1 hour to 14 days (336 hours). 
+The results can be seen in Table~\ref{table:Earth period data}.  
 
 \begin{figure}[hbt!]
     \centering
@@ -198,11 +213,6 @@ Earth is seen to maintain a circular orbit around the Sun.
     \caption{Trajectory of the Earth in orbit of a stationary Sun}
     \label{fig:Earth orbiting fixed sun}
 \end{figure}
-
-
-To determine the accuracy of this orbit, the Earth's orbital period was measured by tracking its crossing of the positive x-axis. 
-The orbit's period was measured at an array of timesteps ranging from 1 hour to 14 days (336 hours). 
-The results can be seen in table~\ref{table:Earth period data}.  
 
 %Earth orbit table
 \begin{table}[hbt!]
@@ -228,13 +238,16 @@ This converging value is seen to be 31,564,128.5 seconds or 365.33 days.
 This value is close to the true value of 1 sidereal year, the time Earth takes to complete 1 orbit around the Sun, of 365.26 days. 
 
 It is also seen that the programme converges on this value quite quickly, where any timestep less than 12 hours shows no noticeable improvement to 
-the period measured to one decimal place. 
+the period when measured to one decimal place. 
 The relative error between a timestep of 1 hour and 72 hours is $\approx\num{1.1e-5}$. 
-A significant deviation is only seen at timesteps on the scale of 14 days where the relative error is $\approx0.17$. 
+A significant deviation is only seen at timesteps on the scale of 14 days where the relative error reaches $\approx0.17$. 
 
-The simulated orbit of out hypothetical planet Erid is seen in Figure~\ref{fig:erid orbit plot} where we see the planet following a circular path 
+The simulated orbit of the hypothetical planet Erid is seen in Figure~\ref{fig:erid orbit plot} where we see the planet following a circular path 
 around the Sun at a radius of 0.44216AU.
 In this figure the simulation was run for 5 years at a timestep of 12 hours. 
+The simulation was run also at the same array of timesteps as the Earth was to calculate its orbital period. 
+The results of this are seen in Table~\ref{table:Erid period data}. 
+
 \begin{figure}[hbt!]
     \centering
     \includegraphics[width=0.8\textwidth]{images/structured3.pdf}
@@ -242,27 +255,12 @@ In this figure the simulation was run for 5 years at a timestep of 12 hours.
     \label{fig:erid orbit plot}
 \end{figure}
 
-
-The simulation was run also at the same array of timesteps as the Earth was, tracking axis crossings to calculate its orbital period. 
-The results of this are seen in Table~\ref{table:Erid period data}. 
-
-From this table it is seen that the programme converges on a single value for Erid's period of 9,280,320.6 seconds, or 107.41 Earth days. 
-It is seen that timesteps of 6 hours or less make no noticeable improvement to the planet's calculated period. 
-This is smaller than the equivalent timestep for the Earth where a timestep of 12 hours made no measurable improvement, 
-The relative error between timesteps of 1 and 72 hours for Erid is $\approx\num{1.7e-2}$.
-A greater deviation is seen when comparing timesteps of 1 hour and 314 days where the relative error is $\approx\num{0.15}$
-
-Comparing these results to the results for Earth seen in Table~\ref{table:Earth period data}, Earth's period converges to the correct value 
-faster than Erid's period.
-Where the relative error between timesteps of 1 and 72 hours for Erid is approximately 1,500 times greater than it is for Earth.  
-However at extreme timesteps of 14 days, the relative errors are almost identical. 
-From this result we can predict that the closer an planet is to the body it is orbiting, the lower the timestep needed is to produce an accurate model.
-This will be useful when deciding on a timestep for the Solar System as only Mercury must be considered.  
+%Erid period data 
 \begin{table}[hbt!]
 \centering
 \begin{tabular}{@{}lllll@{}}
 \toprule
-Timestep (Hours) & Period (Seconds) & Period (Hours) & Period (Earth Days) \\ \midrule
+Timestep (Hours) & Period (Seconds) & Period (Hours) & Period (Days) \\ \midrule
 1  &   9,280,320.6  & 2,577.87  & 107.41 \\
 4  &   9,280,320.6  & 2,577.87  & 107.41 \\
 6  &   9,280,320.6  & 2,577.87  & 107.41 \\
@@ -276,6 +274,18 @@ Timestep (Hours) & Period (Seconds) & Period (Hours) & Period (Earth Days) \\ \m
 \label{table:Erid period data}
 \end{table}
 
+From this table it is seen that the programme converges on a single value for Erid's period of 9,280,320.6 seconds, or 107.41 days. 
+It is seen that timesteps of 6 hours or less make no noticeable improvement to the planet's calculated period. 
+This is smaller than the equivalent timestep for the Earth where a timestep of 12 hours made no measurable improvement, 
+The relative error between timesteps of 1 and 72 hours for Erid is $\approx\num{1.7e-2}$.
+A greater deviation is seen when comparing timesteps of 1 hour and 314 days where the relative error is $\approx\num{0.15}$
+
+Comparing these results to the results for Earth seen in Table~\ref{table:Earth period data}, Earth's period converges to the correct value 
+faster than Erid's period.
+Where the relative error between timesteps of 1 and 72 hours for Erid is approximately 1,500 times greater than it is for Earth.  
+However at extreme timesteps of 14 days, the relative errors are almost identical. 
+From this result it was predicted that the closer an planet is to the body it is orbiting, the lower the timestep needed is to produce an accurate model.
+This will be useful when deciding on a timestep for the Solar System as only Mercury must be considered. 
 
 \subsection{Unstructured Results}
 %Sun allowed to move, zoom in on just its motion as well as unaffected Earth period
@@ -300,9 +310,10 @@ Figure~\ref{fig:moving sun binary orbits} shows how the trajectories of the Eart
     \caption{Trajectories of the Sun and Earth when the Sun is free to move from its initial position.}
     \label{fig:moving sun binary orbits}
 \end{figure}
+
 The motion of Earth is visually unchanged from its motion around a stationary Sun. 
-To quantify the change the period of the orbit was measured to be 31,564,412.9 seconds. 
-This is an increase of 0.0009\%, a negligible difference. 
+To quantify the change, the period of the orbit was measured to be 31,564,412.9 seconds. 
+This is an increase of 0.0009\%. 
 
 With the Sun free to move, its centre of mass now traces a circle through space with a diameter of $\approx900$Km. 
 This result is far smaller than the diameter of the Sun, which is approximately 1,390,000Km \cite{size_of_the_sun}.
@@ -310,9 +321,11 @@ With respect to the size of the Sun itself, its motion due to Earth's pull is ve
 
 
 %Unstructured 2-1 Mercury Convergence
-To select a suitable timestep to simulate all planets of the Solar System, Mercury's motion around the Sun was simulated at a range of timesteps 
-and its period was measured. The result of this simulation can be seen in Table~\ref{table:Mercury period data}. 
-From these results no improvement is seen beyond a timestep of 6 hours. 
+To select a suitable timestep to simulate all planets of the Solar System, Mercury's motion around the Sun was simulated for 5 years at 
+a range of timesteps and its period was measured. 
+The result of this simulation can be seen in Table~\ref{table:Mercury period data}. 
+From these results no improvements are seen beyond a timestep of 6 hours. 
+
 %Mercury periods table
 \begin{table}[hbt!]
 \centering
@@ -332,9 +345,10 @@ Timestep (Hours) & Period (Seconds) & Period (Hours) & Period (Earth Days) \\ \m
 \label{table:Mercury period data}
 \end{table}
 
-For this reason, 6 hours was chosen as an appropriate timestep to simulate the entire Solar System. 
-All planets were added to the programme and the simulation was run for 300 [CHANGE TO 150] years which produced the plot(s) seen in Figure~\ref{fig:solar system plot}. 
-In this figure it is seen that the planets remain in tight, circular orbits over the 300[CHANGE TO 150] simulated years.
+For this reason, 6 hours was chosen as an appropriate timestep to simulate all planets of Solar System. 
+All planets were added to the programme and the simulation was run for 1500 years.
+The planets' trajectories were plotted over time to produced Figure~\ref{fig:solar system plot}. 
+In this figure it is seen that the planets remain in tight, circular orbits over the 1500 simulated years.
 
 %Plot of entire solar system trajectory
 \begin{figure}[hbt!]
@@ -342,43 +356,50 @@ In this figure it is seen that the planets remain in tight, circular orbits over
     \begin{subfigure}[b]{0.48\textwidth}
         \centering
         \includegraphics[width=\textwidth]{images/unstructured_2_solar_system.pdf}
-        \caption{Simulated trajectory of all planets}
+        \caption{Simulated trajectory of all planets of the Solar System}
         \label{fig:all planets solar system plot}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.48\textwidth}
         \centering
         \includegraphics[width=\textwidth]{images/unstructured_2_terrestrial_planets_only.pdf}
-        \caption{Simulated trajectory of terrestrial planets}
+        \caption{Figure zoomed in to highlight trajectory of terrestrial planets}
         \label{fig:terrestrial planets motion}
     \end{subfigure}
     \caption{Trajectories of all planets in the Solar System around the Sun}
     \label{fig:solar system plot}
 \end{figure}
 
-[DISCUSS THE PERIODS OF THE PLANETS AND HOW ACCURATE TO REAL LIFE]
-The simulated periods of the planets can be seen in Table~\ref{table:planet period measurement}. 
+The simulated mean periods of the planets can be seen in Table~\ref{table:planet period measurement}. 
+It is seen that all planets, except for Neptune, have a simulated period which is within $0.3\%$ of its true orbital period. 
+The reason Neptune's period has a greater error is due to the fact that it completes less complete orbits due its large distance from the Sun.
+The planets internal to neptune will complete more orbits of the Sun, allowing their mean to come to a more precise and accurate value. 
 
-
-%Table of radii where orbital resonance is found in simulation. 
+%Table of planet period data and accuracy 
 \begin{table}[hbt!]
 \centering
 \begin{tabular}{@{}lllll@{}}
 \toprule
-Planet   & Expected Period (days) & Simulated Period (days)\\ \midrule
-Mercury  &  88.0   &  \\
-Venus    &  224.7  &  \\
-Earth    &  365.2  &  \\
-Mars     &  687.0  &  \\ 
-Jupiter  &  4331   &  \\ 
-Saturn   &  10,747 &  \\ 
-Uranus   &  30,589 &  \\ 
-Neptune  &  59,800 &  \\ \bottomrule
+Planet   & Expected Period (days) & Simulated Period (days) & Relative error (\%)\\ \midrule
+Mercury  &  87.97  & 88.03  & 0.1 \\
+Venus    &  224.7  & 224.9  & 0.1 \\
+Earth    &  365.3  & 365.7  & 0.1 \\
+Mars     &  687.0  & 668.2  & 0.2 \\ 
+Jupiter  &  4331   & 4340   & 0.2 \\ 
+Saturn   &  10,747 & 10,730 & 0.2 \\ 
+Uranus   &  30,589 & 30,630 & 0.1 \\ 
+Neptune  &  59,800 & 60,770 & 1.6 \\ \bottomrule
 \end{tabular}
 \caption{Orbital radii which display resonance with Jupiter}
 \label{table:planet period measurement}
 \end{table}
 
+%Unstructured 3 - measuring instability and kinetic energy 
+To quantify the stability of these orbits, their kinetic energy was tracked throughout the simulation.
+First only the terrestrial planets were simulated for 100 years. 
+A graph of their kinetic energy over the course of the simulation can be seen in Figure~\ref{fig:terrestrial planets only KE}.
+From the figure it is seen that the kinetic energy of the planets varies by a very small amount. 
+The greatest deviation in kinetic energy was seen in Venus which varies at most by 0.01\%. 
 
 %Figure of terrestrial only planet KE stability
 \begin{figure}[hbt!]
@@ -388,63 +409,53 @@ Neptune  &  59,800 &  \\ \bottomrule
     \label{fig:terrestrial planets only KE}
 \end{figure}
 
-%Kinetic energy plots with all planets
-\begin{figure}[hbt!]
-    \centering
-    \begin{subfigure}[b]{0.48\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{images/unstructured_3_2_terrestrial_body_energy_subplot.pdf}
-        \caption{Simulated kinetic energy of the terrestrial planets}
-        \label{fig:terrestrial planets kinetic energy}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}[b]{0.48\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{images/unstructured_3_2_gaseous_planet_stability.pdf}
-        \caption{Simulated kinetic energy of the gaseous planets}
-        \label{fig:gaseous planets kinetic energy}
-    \end{subfigure}
-    \caption{Kinetic energies of all planets in the Solar System plotted over time}
-    \label{fig:solar system kinetic energy plot}
-\end{figure}
-
-
-%Unstructured 3 - measuring instability and kinetic energy 
-To quantify the stability of these orbits, their kinetic energy was tracked throughout the simulation.
-First only the terrestrial planets were simulated for 100 years. 
-A graph of their kinetic energy over the course of the simulation can be seen in Figure~\ref{fig:terrestrial planets only KE}.
-From the figure it is seen that the kinetic energy of the planets varies by a very small amount. 
-The greatest deviation in kinetic energy was seen in Venus which only varies by 0.01\%. 
-
 By adding the gas giants to the simulation and plotting the kinetic energy of all planets, Figure~\ref{fig:solar system kinetic energy plot} was generated. 
 A noticeable change was seen in the terrestrial planets where they now oscillate with a period of $\approx11.9$ years. 
 This oscillation coincides well with Jupiter's period which in this run was 11.89 years. 
 This effect is a consequence of Jupiter's very large mass (\num{1.9e27}Kg), which can be enough to shift the centre of mass of the Solar system beyond 
 the surface of the Sun. 
 This behaviour is reflective of the real Solar System where Jupiter's orbit causes the inner, terrestrial planets to `slosh' about the Sun in time with 
-its orbit. [REFERENCE HERE]
+its orbit\cite{jupiter_affect_on_earth}.
 Jupiter also had the greatest deviation in kinetic energy among all the planets of $\Delta KE=0.3\%$. 
 This minimal deviation is evidence to support the accuracy of this simulation. 
 
+%Kinetic energy plots with all planets
+\begin{figure}[hbt!]
+    \centering
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/unstructured_3_2_terrestrial_body_energy_subplot.pdf}
+        \caption{Simulated kinetic energy of the terrestrial planets against time}
+        \label{fig:terrestrial planets kinetic energy}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/unstructured_3_2_gaseous_planet_stability.pdf}
+        \caption{Simulated kinetic energy of the gas giants against time}
+        \label{fig:gaseous planets kinetic energy}
+    \end{subfigure}
+    \caption{Kinetic energies of all planets in the Solar System plotted over time}
+    \label{fig:solar system kinetic energy plot}
+\end{figure}
 
 %Examination of kirkwood gaps
-To locate the radii where the Kirkwood gaps are expected, asteroids were simulated at radii of 2.0AU - 3.4AU at intervals of $\Delta r=0.01$AU.
+To locate the radii where the Kirkwood gaps are expected, asteroids were simulated at radii from 2.0AU - 3.4AU at intervals of $\Delta r=0.01$AU.
 The period of these asteroids were measured and compared to Jupiter's period to find their orbital ratios. 
 This was compared to the predicted radii of these gaps given by equation~\ref{equation: radii of kirkwood gaps}, where $\frac{T_{asteroid}}{T_{Jupiter}}$ 
 forms a simple ratio such as $\frac{3}{1}$.  
-The ratios corresponding to the primary Kirkwood gaps 
-isolate simple orbital ratios which can be seen in Table~\ref{table:orbital resonance asteroids}
+The ratios corresponding to the primary Kirkwood gaps (3:1, 5:2, 7:3, 2:1) can be seen in Table~\ref{table:orbital resonance asteroids}
 
 %Table of radii where orbital resonance is found in simulation. 
 \begin{table}[hbt!]
 \centering
-\begin{tabular}{@{}lllll@{}}
+\begin{tabular}{@{}llll@{}}
 \toprule
-Ratio of Periods \\ (Asteroid : Jupiter) & Expected Radius (AU) & Simulated Radius (AU) & Simulated Ratio \\\midrule
-3:1    &  2.50 & 2.50 & 3.002:1 \\
-5:2    &  2.82 & 2.83 & 2.500:1 = 5.000:2[CHECK] \\
-7:3    &  2.96 & 2.96 & 2.329:1 = 6.987:3 \\
-2:1    &  3.28 & 3.28 & 2.001:1 \\ \bottomrule
+Ratio of Periods \\ (Asteroid:Jupiter) & Expected Radius (AU) & Simulated Radius (AU) & Simulated Ratio \\\midrule
+3:1 &  2.50 & 2.50 & 3.002:1 \\
+5:2 &  2.82 & 2.83 & 2.500:1=5.000:2 \\
+7:3 &  2.96 & 2.96 & 2.329:1=6.987:3 \\
+2:1 &  3.28 & 3.28 & 2.001:1 \\ \bottomrule
 \end{tabular}
 \caption{Orbital radii which display resonance with Jupiter}
 \label{table:orbital resonance asteroids}
@@ -453,6 +464,7 @@ Ratio of Periods \\ (Asteroid : Jupiter) & Expected Radius (AU) & Simulated Radi
 Asteroids placed in circular orbits at these radii were simulated for 300 years. 
 An asteroid at a `stable' radius of 2.6AU was added to the plot for comparison. 
 Their trajectories and normalised kinetic energy were plotted against as can be seen in Figure~\ref{fig:circular kirkwood gaps} 
+
 %Plot of circular orbits in kirkwood gaps
 \begin{figure}[hbt!]
     \centering
@@ -472,14 +484,14 @@ Their trajectories and normalised kinetic energy were plotted against as can be 
     \caption{Behaviour of asteroids placed in circular orbits at the Kirkwood gaps under Jupiter's effect}
     \label{fig:circular kirkwood gaps}
 \end{figure}
-From the figure we see that the orbit of of the asteroid at the 5:2 kirkwood gap is the only one [really] affected by its resonance with Jupiter. 
-It's kinetic energy deviates by 27\% at its most extreme as its orbit is `smeared' from a circle to an ellipse. 
+
+From the figure we see that the orbit of of the asteroid at the 5:2 kirkwood gap is the only one affected by its resonance with Jupiter. 
+At its most extreme point its kinetic energy deviates by 27\% as its orbit is `smeared' from a circle to an ellipse.
 Despite expecting this behaviour from all asteroids in the gaps, the 5:2 gap is the only orbit where orbital instability is seen. 
-[BUT WHY?]
-% [FIND: Murray and Dermott, Solar System Dynamics. LOOK FOR KIRKWOOD GAPS]
-The strength of this resonance scales with an orbits eccentricity \cite{wisdom1_paper}. 
-To allow the simulation to reflect this, asteroids were set on orbits with an eccentricity of 0.15 and the simulation was run for () years. 
-The eccentricity of the asteroids was measured every 100 steps and plotted against time to give Figure~\ref{fig:asteroid eccentricity}. [RERUN]
+
+It is known that the effect of this resonance scales with an orbits eccentricity \cite{wisdom1_paper}. 
+To allow the simulation to reflect this, asteroids were set on orbits with an eccentricity of 0.15 and the simulation was run for 20,000 years. 
+The eccentricity of the asteroids was measured every 500 steps and plotted against time to give Figure~\ref{fig:asteroid eccentricity}.
 
 %Figure of asteroid eccentricity
 \begin{figure}[hbt!]
@@ -489,20 +501,19 @@ The eccentricity of the asteroids was measured every 100 steps and plotted again
     \label{fig:asteroid eccentricity}
 \end{figure}
 
-In this Figure it is seen that the eccentricity of the asteroid in the 5:2 gaps grew drastically as the simulation progressed. 
+In this figure it is seen that the eccentricity of the asteroid in the 5:2 gaps grew drastically as the simulation progressed. 
 This clearly illustrates the instability of an asteroid in this gap.
-The other asteroids in Kirkwood gaps are seen to make large erratic jumps in their eccentricities. 
+The other asteroids in Kirkwood gaps are seen to make sudden, erratic jumps in their eccentricities. 
 While the eccentricities of the other asteroids do not climb to such extremes, their instability is reflected in the erratic jumps seen in the figure. 
 This behaviour is expected of asteroids in these regions\cite{computational_physics_textbook}.
 
-In contrast to these jerky changes in eccentricity, the asteroid at 2.60AU is seen to vary more smoothly over time.  
-This smooth oscillation is reflective of the stability of this orbit and explains why this region is so densely populated as seen in 
-Figure~\ref{fig:Kirkwood histogram}. 
+In contrast to these jerky changes in the unstable orbits, the eccentricity of the stable asteroid at 2.60AU is seen to vary more smoothly over time.  
+This smooth oscillation is endemic of the stability of this orbit and explains why this region is so densely populated in Figure~\ref{fig:Kirkwood histogram}. 
 
 
 %-------------------------------------------------------------------------------------------------------------------------------------------------------
 \section{Conclusion}
-The simulation discussed in this report was shown to make accurate predictions of the trajectory and orbital periods of bodies in the Solar System. 
+The simulation discussed in this report was shown to make accurate predictions of the trajectory and orbital periods of known bodies in the Solar System. 
 These orbits remained steady for hundreds of years with very little unexpected deviation. 
 The `sloshing' of the terrestrial planets with Jupiter's orbit is an example of emergent behaviour which is reflected in the behaviour of the real 
 Solar System. 
@@ -511,10 +522,10 @@ Solar System.
 The simulation predicts the instability of orbits at the Kirkwood gaps in the Asteroid Belt at the same radii as seen in Solar System. 
 It also shows how other radii within the Asteroid Belt can house stable orbits. 
 
-Though the simulation was successful in its aims, number of improvements can still be made.
-The main improvement that should be made to the simulation would be to account for elliptical orbits when simulating the Solar System. 
+Though the simulation was successful in its aims, a number of improvements can still be made.
+The main improvement that could be made to the simulation would be to account for elliptical orbits when simulating the Solar System. 
 Though low for most of the planets, Mercury has the greatest eccentricity of 0.21. 
-Accounting for this would make its orbit around the Sun noticeably less circular and give a more accurate prediction for its orbital period. 
+Accounting for this would make its orbit around the Sun much more accurate and give a more accurate prediction for its orbital period. 
 
 Another modification that could be made to the simulation would be to simulate the whole system in 3 dimensions instead of 2. 
 For the Solar System, the benefits from this change would be minimal as most planets, bar Mercury again, orbit the Sun with relatively low orbital inclinations. 
@@ -522,12 +533,12 @@ Improvements from this change would be quite minor.
 
 
 %-------------------------------------------------------------------------------------------------------------------------------------------------------
-\section{Use of AI}
+\section{Use of AI} \label{Use of AI}
 In the process of making this report, AI was used to create a blank LaTeX document and help with formatting as the report progressed. 
 This was done as I am unfamiliar with using LaTeX wished to be more focused on the contents of the report than the language it is written in. 
 
 AI was also used to assist in the formatting of the subplots, such as Figure~\ref{fig:terrestrial planets only KE}, where I was unable to figure out how 
-to assign one x-axis label to the whole plot and just the individual subplots. 
+to assign one x/y-axis label to the whole plot and just the individual subplots. 
 
 
 %-------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -538,6 +549,7 @@ to assign one x-axis label to the whole plot and just the individual subplots.
 %-------------------------------------------------------------------------------------------------------------------------------------------------------
 \newpage
 \section*{Appendix}
+Word count: 4499
 The simulations used in this project were all written in python and this report was written using LaTeX. 
 
 
