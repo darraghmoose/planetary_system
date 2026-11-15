@@ -13,20 +13,20 @@ G = 6.67e-11
 M_SUN = 1.98892e30
 
 #simulation runtime parameters
-timestep = 24 * 3600        #seconds per timestep
-num_steps = 300 * (365)  #iterations per simulaiton
+timestep = 72 * 3600                  #seconds per timestep
+num_steps = int(500 * 3 * (365/3)/7)  #iterations per simulaiton
 
 #use arrays to store data for each body      -      data taken from https://solarsystem.nasa.gov/planet-compare/ 
 body_names = np.array(["Sun", "Jupiter", "Asteroid"])
 masses = np.array([1.98892e30, 1.89813E27, 0.95E21])
-Jupiter_radius = 7.78479E11
-kirkwood_radii = [2.5*AU, 2.83*AU, 2.96*AU, 3.28*AU]
+jupiter_radius = 7.78479E11
+kirkwood_radii = [2.5*AU, 2.83*AU, 2.96*AU, 3.28*AU, 2.6*AU] #2.6AU asteroid is expected to be stable
 
 def main_simulation(asteroid_radius: float):
     """Simulates the Sun, Jupiter and a single asteroid starting at asteroid_radius.
     Returns the x and y positions of all bodies and the kinetic energy of the asteroid."""
 
-    initial_radii = np.array([0, Jupiter_radius, asteroid_radius])
+    initial_radii = np.array([0, jupiter_radius, asteroid_radius])
 
     #create blank arrays of equal dimensions to store position and velocity data
     x_positions = np.zeros((num_steps,len(body_names))); y_positions = np.zeros((num_steps,len(body_names)))
@@ -74,24 +74,27 @@ for i in range(len(kirkwood_radii)):
 #plot orbits of bodies to screen
 plot_colours = ['#ef0000', '#c98226', '#8c8987', '#dfb18c', '#3c6690', '#ff6b4d', '#f8d280', '#5d8b8e', '#4e5a74']
 plt.figure(1, figsize=(6, 6))
-#sun and jupiter are near identical every run, so plot them from the first
+#plot trajectory of sun and jupiter once since its almost completely unchanged 
 plt.plot(all_x_positions[0][:, 0]/AU, all_y_positions[0][:, 0]/AU, color=plot_colours[0], label=body_names[0])
-plt.plot(all_x_positions[0][:, 1]/AU, all_y_positions[0][:, 1]/AU, color=plot_colours[1], label=body_names[1])
+#plt.plot(all_x_positions[0][:, 1]/AU, all_y_positions[0][:, 1]/AU, color=plot_colours[1], label=body_names[1])
 for i in range(len(kirkwood_radii)):
-    plt.plot(all_x_positions[i][:, 2], all_y_positions[i][:, 2], color=plot_colours[i+2], label=f'Asteroid {kirkwood_radii[i]/AU:.2f} AU')
-plt.xlabel('X [AU]')
-plt.ylabel('Y [AU]')
-plt.legend()
+    plt.plot(all_x_positions[i][:, 2]/AU, all_y_positions[i][:, 2]/AU, color=plot_colours[i+2], label=f'Asteroid {kirkwood_radii[i]/AU:.2f} AU')
+plt.xlabel('X [AU]', fontsize=16)
+plt.ylabel('Y [AU]', fontsize=16)
+plt.legend(loc="upper right")
 plt.tight_layout()
+plt.savefig('images/unstructured_4_2_circular_orbits.pdf')
+
 
 #create normalised plot of asteroid energy
 plt.figure(2, figsize=(6, 6))
 plt.title("Asteroid Kinetic Energy")
 for i in range(len(kirkwood_radii)):
     plt.plot(np.linspace(0, timestep*num_steps, num=num_steps), normalised_energy[i], color=plot_colours[i+2], label=f'Asteroid {kirkwood_radii[i]/AU:.2f} AU') 
-plt.ylabel('Normalised Kinetic Energy')
-plt.xlabel('Time')
-plt.legend()
+plt.ylabel('Normalised Kinetic Energy', fontsize=16)
+plt.xlabel('Time', fontsize=16)
+plt.legend(loc="upper left")
 plt.tight_layout()
+plt.savefig('images/unstructured_4_2_circular_energies.pdf')
 
-plt.show()
+#plt.show()

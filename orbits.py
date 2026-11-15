@@ -1,6 +1,7 @@
 import numpy as np
 
 G = 6.67e-11
+M_SUN=1.98892e30
 
 def initial_positions(radii: np.ndarray) -> tuple:
     #intake radius of planets orbit and return random x,y coords to start planet at
@@ -28,23 +29,33 @@ def initial_velocity(x_start: np.ndarray, y_start: np.ndarray, mass):
     
     return initial_x_velocity, initial_y_velocity
 
-
 def elliptical_initial_velocity(x_start, y_start, eccentricity):
-    """Function accepts staring position of asteroid and initial eccentricity of orbit. 
-    Assumes the body will start at apogee and retuns the initial velocity of that body. """
+    """Accepts the starting position of each body at apogee and its eccentricity. 
+    Returns the initial velocity needed for that orbit."""
     sun_mass = 1.98892e30 #kg
     initial_x_velocity = np.zeros(len(x_start))
     initial_y_velocity = np.zeros(len(y_start))
-    semimajor_axis = np.sqrt(x_start**2 + y_start**2)
+    apogee_radius = np.hypot(x_start, y_start)
 
-    for i in range(len(semimajor_axis)):
-        if semimajor_axis[i] == 0.0: #ignore the sun initially, it is later given velocity to give system momentum = 0
+    for i in range(len(apogee_radius)):
+        if apogee_radius[i] == 0.0: #ignore the sun initially, it is later given velocity to give system momentum = 0
             continue
-        speed = np.sqrt((G*sun_mass*(1-eccentricity[i]))/(semimajor_axis[i]*(1+eccentricity[i])))
-        initial_x_velocity[i] = speed * y_start[i] / semimajor_axis[i]
-        initial_y_velocity[i] = -speed * x_start[i] / semimajor_axis[i]
-    
+        speed = np.sqrt(G * sun_mass * (1 - eccentricity[i]) / apogee_radius[i])
+        initial_x_velocity[i] = speed * y_start[i] / apogee_radius[i]
+        initial_y_velocity[i] = -speed * x_start[i] / apogee_radius[i]
+
     return initial_x_velocity, initial_y_velocity
+
+def orbital_elements(x, y, vx, vy, xs, ys, vxs, vys, mu=G*M_SUN):
+    """Returns semi-major axis and eccentricity of body relative to the sun."""
+    rx, ry = x - xs, y - ys
+    rvx, rvy = vx - vxs, vy - vys
+    r = np.hypot(rx, ry)
+    v2 = rvx**2 + rvy**2
+    a = 1 / (2/r - v2/mu)
+    h = rx*rvy - ry*rvx     #specific angular momentum
+    e = np.sqrt(np.maximum(0, 1 + (v2 - 2*mu/r) * h**2 / mu**2))
+    return a, e
 
 
 def acceleration(x_positions, y_positions, mass) -> tuple:
@@ -53,7 +64,7 @@ def acceleration(x_positions, y_positions, mass) -> tuple:
     x_seperations = x_positions[None, :] - x_positions[:, None] #create 2D array where item[i][j] is the distance between j and i (xj - xi)
     y_seperations = y_positions[None, :] - y_positions[:, None] #same array but for y position
     #"https://stackabuse.com/guide-to-numpy-matrix-subtraction/" info on how vector subreaction works to make difference matrix
-    seperations = np.sqrt(x_seperations**2 + y_seperations**2) #calculate geometric seperation between bodies. works itemwise across both arrays
+    seperations = np.sqrt(x_seperations**2 + y_seperations**2) #calculate seperation between bodies
     """when i=j their seperation =0. this will lead to 0/0 error when calculating k. We want k=0 for this case. 
     To do this, we use fill_diagonal() to set seperation[i][i]=infinity to give 0/infinity which the computer will read as 0 giving k=0 """
     np.fill_diagonal(seperations, np.inf) #np.inf gives infinity to guarantee k=0

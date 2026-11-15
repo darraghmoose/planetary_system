@@ -8,6 +8,7 @@ AU = 1.495978707e11
 G = 6.67e-11
 body_names = np.array(["Sun", "Jupiter", "Asteroid"])
 masses = np.array([1.98892e30, 1.89813E27, 0.95E21])
+jupiter_radius = 7.78479E11
 
 def kinetic_energy(body_mass, body_x_velocity, body_y_velocity):
     energy = 0.5 * body_mass * (body_x_velocity**2 + body_y_velocity**2)
@@ -27,7 +28,7 @@ def asteroid_stability_simulation(target_radii):
     progress = tqdm(total=len(target_radii) * (num_steps - 1), ncols=90, ascii=" ░▒█", desc='Simulation Running', colour="#00bb82")
 
     for i in range(len(target_radii)):
-        initial_radii = np.array([0, 7.78479E11, target_radii[i]])
+        initial_radii = np.array([0, jupiter_radius, target_radii[i]])
 
         #create blank arrays of equal dimensions to store position and velocity data
         x_positions = np.zeros((num_steps,len(body_names))); y_positions = np.zeros((num_steps,len(body_names)))
