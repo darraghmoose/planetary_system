@@ -13,7 +13,6 @@ def initial_positions(radii: np.ndarray) -> tuple:
 
     return random_x, random_y
 
-
 def initial_velocity(x_start: np.ndarray, y_start: np.ndarray, mass):
     #returns initial velocity of planets at the start of simulaiton based only on orbital radius
     initial_x_velocity = np.zeros(len(x_start))
@@ -57,7 +56,6 @@ def orbital_elements(x, y, vx, vy, xs, ys, vxs, vys, mu=G*M_SUN):
     e = np.sqrt(np.maximum(0, 1 + (v2 - 2*mu/r) * h**2 / mu**2))
     return a, e
 
-
 def acceleration(x_positions, y_positions, mass) -> tuple:
     """ Function accepts x and y positions of all bodies at once and calculates the acceleration applied to all bodies simultaneously. 
     Returns updated acceleration for all bodies"""
@@ -73,7 +71,6 @@ def acceleration(x_positions, y_positions, mass) -> tuple:
     x_acceleration = (G * np.sum(mass[None, :] * x_seperations / (seperations**3), axis=1)) #np.sum ensures the acceleration change is imparted on the body by all other bodies on the system at the same time
     y_acceleration = (G * np.sum(mass[None, :] * y_seperations / (seperations**3), axis=1)) #axis=1 ensures dimensions are right for returning as 1D array
     return x_acceleration, y_acceleration
-
 
 def body_update(x, y, vx, vy, dt: float, mass) -> tuple:
     """

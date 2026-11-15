@@ -14,7 +14,7 @@ M_SUN = 1.98892e30
 
 #simulation runtime parameters
 timestep = 72 * 3600                  #seconds per timestep
-num_steps = int(500 * 3 * (365/3)/7)  #iterations per simulaiton
+num_steps = int(200 * (365/3))  #iterations per simulaiton
 
 #use arrays to store data for each body      -      data taken from https://solarsystem.nasa.gov/planet-compare/ 
 body_names = np.array(["Sun", "Jupiter", "Asteroid"])
@@ -70,9 +70,9 @@ print(f'------------------------------')
 for i in range(len(kirkwood_radii)):
     print(f'{kirkwood_radii[i]/AU:<15,.2f}{deviation[i]*100:<15,.1f}')
 
-plot_colours = ['#ef0000', '#c98226', '#8c8987', '#dfb18c', '#3c6690', '#ff6b4d', '#f8d280', '#5d8b8e', '#4e5a74']
-"""
+
 #plot orbits of bodies to screen
+plot_colours = ['#ef0000', '#c98226', '#8c8987', '#dfb18c', '#3c6690', '#ff6b4d', '#f8d280', '#5d8b8e', '#4e5a74']
 plt.figure(1, figsize=(6, 6))
 #plot trajectory of sun and jupiter once since its almost completely unchanged 
 plt.plot(all_x_positions[0][:, 0]/AU, all_y_positions[0][:, 0]/AU, color=plot_colours[0], label=body_names[0])
@@ -84,7 +84,7 @@ plt.ylabel('Y [AU]', fontsize=16)
 plt.legend(loc="upper right")
 plt.tight_layout()
 plt.savefig('images/unstructured_4_2_circular_orbits.pdf')
-"""
+
 
 #create normalised plot of asteroid energy
 plt.figure(2, figsize=(6, 6))
@@ -96,5 +96,3 @@ plt.xlabel('Time [Years]', fontsize=16)
 plt.legend(loc="upper left")
 plt.tight_layout()
 plt.savefig('images/unstructured_4_2_circular_energies.pdf')
-
-#plt.show()

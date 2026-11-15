@@ -4,10 +4,11 @@
 \usepackage{siunitx}
 \usepackage{graphicx}
 \usepackage{listings} %This package and the below package allows us to enter python code to the latex file
+\usepackage{courier}  %Use courier font in code snippets
 \usepackage{xcolor}   %These settings were all stolen from the internet as good ones for python
 \lstset{
     language=Python,
-    basicstyle=\ttfamily\small,
+    basicstyle=\ttfamily,
     keywordstyle=\color{blue},
     commentstyle=\color{gray}\itshape,
     stringstyle=\color{red},
@@ -22,11 +23,6 @@
 \usepackage{booktabs} %for tables
 \usepackage[numbers, square, semicolon]{natbib} %For referencing
 \usepackage{subcaption} %For sub-figures
-
-%example of referencing code if needed
-% \begin{lstlisting}[language=Python]
-%     if y_coord_prev * y_coord_now < 0 and x_coord_now > 0:
-% \end{lstlisting}
 
 \title{Simulation of the Motion of Astronomical Bodies in the Solar System and Examination of the Kirkwood Gaps in the Asteroid Belt}
 \author{Darragh Morrissey - 40451054}
@@ -409,7 +405,8 @@ The greatest deviation in kinetic energy was seen in Venus which varies at most 
     \label{fig:terrestrial planets only KE}
 \end{figure}
 
-By adding the gas giants to the simulation and plotting the kinetic energy of all planets, Figure~\ref{fig:solar system kinetic energy plot} was generated. 
+By adding the gas giants to the simulation and plotting the kinetic energy of all planets over 200 years, Figure~\ref{fig:solar system kinetic energy plot} 
+was generated. 
 A noticeable change was seen in the terrestrial planets where they now oscillate with a period of $\approx11.9$ years. 
 This oscillation coincides well with Jupiter's period which in this run was 11.89 years. 
 This effect is a consequence of Jupiter's very large mass (\num{1.9e27}Kg), which can be enough to shift the centre of mass of the Solar system beyond 
@@ -461,7 +458,7 @@ Ratio of Periods \\ (Asteroid:Jupiter) & Expected Radius (AU) & Simulated Radius
 \label{table:orbital resonance asteroids}
 \end{table}
 
-Asteroids placed in circular orbits at these radii were simulated for 300 years. 
+Asteroids placed in circular orbits at these radii were simulated for 200 years. 
 An asteroid at a `stable' radius of 2.6AU was added to the plot for comparison. 
 Their trajectories and normalised kinetic energy were plotted against as can be seen in Figure~\ref{fig:circular kirkwood gaps} 
 
@@ -550,8 +547,1108 @@ to assign one x/y-axis label to the whole plot and just the individual subplots.
 \newpage
 \section*{Appendix}
 Word count: 4499
+
 The simulations used in this project were all written in python and this report was written using LaTeX. 
 
+orbits.py
+\begin{lstlisting}[language=Python]
+
+import numpy as np
+
+G = 6.67e-11
+M_SUN=1.98892e30
+
+def initial_positions(radii: np.ndarray) -> tuple:
+    #intake radius of planets orbit and return random x,y coords to start planet at
+    theta = np.random.uniform(0, 2*np.pi, size = len(radii))    #theta in radians
+    random_x = radii * np.cos(theta)   
+    random_y = radii * np.sin(theta)
+    #ensure sun remains at (0,0)
+    random_x[0], random_y[0] = (0.0, 0.0)
+
+    return random_x, random_y
+
+def initial_velocity(x_start: np.ndarray, y_start: np.ndarray, mass):
+    #returns initial velocity of planets at the start of simulaiton based only on orbital radius
+    initial_x_velocity = np.zeros(len(x_start))
+    initial_y_velocity = np.zeros(len(y_start))
+    orbit_radius = np.sqrt(x_start**2 + y_start**2)
+
+    for i in range(len(orbit_radius)):
+        if orbit_radius[i] == 0: #ignore the sun initially, it is given velocity to give system momentum = 0
+            continue
+        speed = np.sqrt(G * mass[0] / orbit_radius[i])
+        initial_x_velocity[i] = speed * y_start[i] / orbit_radius[i]
+        initial_y_velocity[i] = -speed * x_start[i] / orbit_radius[i]
+    
+    return initial_x_velocity, initial_y_velocity
+
+def elliptical_initial_velocity(x_start, y_start, eccentricity):
+    """Accepts the starting position of each body at apogee and its eccentricity. 
+    Returns the initial velocity needed for that orbit."""
+    sun_mass = 1.98892e30 #kg
+    initial_x_velocity = np.zeros(len(x_start))
+    initial_y_velocity = np.zeros(len(y_start))
+    apogee_radius = np.hypot(x_start, y_start)
+
+    for i in range(len(apogee_radius)):
+        if apogee_radius[i] == 0.0: #ignore the sun initially, it is later given velocity to give system momentum = 0
+            continue
+        speed = np.sqrt(G * sun_mass * (1 - eccentricity[i]) / apogee_radius[i])
+        initial_x_velocity[i] = speed * y_start[i] / apogee_radius[i]
+        initial_y_velocity[i] = -speed * x_start[i] / apogee_radius[i]
+
+    return initial_x_velocity, initial_y_velocity
+
+def orbital_elements(x, y, vx, vy, xs, ys, vxs, vys, mu=G*M_SUN):
+    """Returns semi-major axis and eccentricity of body relative to the sun."""
+    rx, ry = x - xs, y - ys
+    rvx, rvy = vx - vxs, vy - vys
+    r = np.hypot(rx, ry)
+    v2 = rvx**2 + rvy**2
+    a = 1 / (2/r - v2/mu)
+    h = rx*rvy - ry*rvx     #specific angular momentum
+    e = np.sqrt(np.maximum(0, 1 + (v2 - 2*mu/r) * h**2 / mu**2))
+    return a, e
+
+def acceleration(x_positions, y_positions, mass) -> tuple:
+    """ Function accepts x and y positions of all bodies at once and calculates the acceleration applied to all bodies simultaneously. 
+    Returns updated acceleration for all bodies"""
+    x_seperations = x_positions[None, :] - x_positions[:, None] #create 2D array where item[i][j] is the distance between j and i (xj - xi)
+    y_seperations = y_positions[None, :] - y_positions[:, None] #same array but for y position
+    #"https://stackabuse.com/guide-to-numpy-matrix-subtraction/" info on how vector subreaction works to make difference matrix
+    seperations = np.sqrt(x_seperations**2 + y_seperations**2) #calculate seperation between bodies
+    """when i=j their seperation =0. this will lead to 0/0 error when calculating k. We want k=0 for this case. 
+    To do this, we use fill_diagonal() to set seperation[i][i]=infinity to give 0/infinity which the computer will read as 0 giving k=0 """
+    np.fill_diagonal(seperations, np.inf) #np.inf gives infinity to guarantee k=0
+
+    #calculate new accelerations of all bodies and save to 1D array
+    x_acceleration = (G * np.sum(mass[None, :] * x_seperations / (seperations**3), axis=1)) #np.sum ensures the acceleration change is imparted on the body by all other bodies on the system at the same time
+    y_acceleration = (G * np.sum(mass[None, :] * y_seperations / (seperations**3), axis=1)) #axis=1 ensures dimensions are right for returning as 1D array
+    return x_acceleration, y_acceleration
+
+def body_update(x, y, vx, vy, dt: float, mass) -> tuple:
+    """
+    Accepts arrays of positions and velocities
+    Returns updated position and velocity of subject in x and y
+    """
+
+    #calculate all a values
+    a_x_position , a_y_position = vx,  vy             #abcd values will all be arrays 
+    a_x_velocity, a_y_velocity = acceleration(x, y, mass)   #updated velocity is an acceleration by definition of runge kutta method, that is reason function is named acceleration
+
+    #calculate all b values
+    b_x_position, b_y_position = vx + 0.5*dt*a_x_velocity, vy + 0.5*dt*a_y_velocity
+    b_x_velocity, b_y_velocity = acceleration(x + 0.5*dt*a_x_position, y + 0.5*dt*a_y_position, mass)
+
+    #calculate all c values
+    c_x_position, c_y_position = vx + 0.5*dt*b_x_velocity, vy + 0.5*dt*b_y_velocity
+    c_x_velocity, c_y_velocity = acceleration(x + 0.5*dt*b_x_position, y + 0.5*dt*b_y_position, mass)
+   
+    #calculate all d values
+    d_x_position, d_y_position = vx + dt*c_x_velocity, vy + dt*c_y_velocity
+    d_x_velocity, d_y_velocity = acceleration(x + dt*c_x_position, y + dt*c_y_position, mass)
+
+    #calculate weighted average of values to update all variables
+    updated_x_positions = x + ((dt/6) * (a_x_position + 2*b_x_position + 2*c_x_position + d_x_position))
+    updated_y_positions = y + ((dt/6) * (a_y_position + 2*b_y_position + 2*c_y_position + d_y_position))
+    updated_x_velocities = vx + ((dt/6) * (a_x_velocity + 2*b_x_velocity + 2*c_x_velocity + d_x_velocity))
+    updated_y_velocities = vy + ((dt/6) * (a_y_velocity + 2*b_y_velocity + 2*c_y_velocity + d_y_velocity))
+
+    return updated_x_positions, updated_y_positions, updated_x_velocities, updated_y_velocities
+
+\end{lstlisting}$ $
+
+structured\_1.py
+\begin{lstlisting}[language=Python]
+import numpy as np
+import matplotlib.pyplot as plt
+from tqdm import tqdm
+from orbits import initial_positions, initial_velocity, body_update
+
+#constants & parameters
+AU = 1.495978707e11
+G = 6.67e-11
+M_SUN = 1.98892e30
+timestep = 12 * 3600 #3600 seconds = 1 hour
+num_steps = 5 * (365 * 2)  #multiple of earth years
+
+#Orbiting bodies data
+body_names = np.array(["Sun", "Earth"])
+masses = np.array([1.98892e30, 5.9742E24])
+initial_radii = np.array([0, 1.495978707e11])
+plot_colours = ['#ef0000', '#3c6690']
+
+#create blank arrays of equal dimensions to store position and velocity data
+x_positions = np.zeros((num_steps,len(body_names))); y_positions = np.zeros((num_steps,len(body_names)))
+x_velocities = np.zeros((num_steps,len(body_names))); y_velocities = np.zeros((num_steps,len(body_names)))
+
+#initialise position and velocity of all bodies surrounding the sun
+x_positions[0], y_positions[0] = initial_positions(initial_radii)
+
+#initialise velocities of all planets 
+x_velocities[0], y_velocities[0] = initial_velocity(x_positions[0], y_positions[0], masses)
+
+
+#main simulation loop
+crossings = [[] for i in range(len(body_names)-1)]
+for loop in tqdm(range(1, num_steps), ncols=90, desc="Running Simulation", colour="#00bb82"):
+    x_positions[loop], y_positions[loop], x_velocities[loop], y_velocities[loop] = body_update(x_positions[loop-1], y_positions[loop-1], x_velocities[loop-1], y_velocities[:][loop-1], timestep, masses)
+
+
+#plot orbits of bodies to screen
+plt.figure(figsize=(6, 6))
+for i in range(len(body_names)):
+    if i == 0: #need to use marker for sun as it never moves
+        plt.plot(x_positions[0, i]/AU, y_positions[0, i]/AU, 'o', color=plot_colours[i], markersize=8, label=body_names[i]) 
+    else:
+        plt.plot(x_positions[:, i]/AU, y_positions[:, i]/AU, color=plot_colours[i], label=body_names[i])
+plt.axis('equal')
+plt.xlabel('X (AU)')
+plt.ylabel('Y (AU)')
+plt.legend()
+plt.savefig("images/structured1.pdf")
+plt.show()
+    
+\end{lstlisting}
+
+structured\_2.py
+\begin{lstlisting}[language=Python]
+import numpy as np
+from tqdm import tqdm
+from orbits import initial_positions, initial_velocity, body_update
+
+#simulation settings
+num_steps = int(3 * (365 * 24))
+
+#Orbiting bodies data
+body_names = np.array(["Sun", "Earth"])
+masses = np.array([1.98892e30, 5.9742E24])
+initial_radii = np.array([0, 1.495978707e11])
+
+#main simulation function
+def run_simulation(timestep):
+    #create blank arrays of equal dimensions to store position and velocity data
+    x_positions = np.zeros((num_steps,len(body_names))); y_positions = np.zeros((num_steps,len(body_names)))
+    x_velocities = np.zeros((num_steps,len(body_names))); y_velocities = np.zeros((num_steps,len(body_names)))
+
+    #initialise position of all bodies surrounding the sun
+    x_positions[0], y_positions[0] = initial_positions(initial_radii)
+
+    #initialise velocities of all planets
+    x_velocities[0], y_velocities[0] = initial_velocity(x_positions[0], y_positions[0], masses)
+
+    #main simulation loop
+    crossings = [[] for i in range(len(body_names)-1)]
+    for loop in range(1, num_steps):
+        x_positions[loop], y_positions[loop], x_velocities[loop], y_velocities[loop] = body_update(x_positions[loop-1], y_positions[loop-1], x_velocities[loop-1], y_velocities[:][loop-1], timestep, masses)
+        #check for axis crossing
+        for planet in range(1, len(body_names)):
+            y_coord_now = y_positions[loop][planet] - y_positions[loop][0]
+            y_coord_prev = y_positions[loop-1][planet] - y_positions[loop-1][0]
+            x_coord_now = x_positions[loop][planet] - x_positions[loop][0]
+
+            #look for sign change across axis 
+            if y_coord_prev * y_coord_now < 0 and x_coord_now > 0:
+                #timestep at [loop] = loop * timesteps
+                time_after = loop * timestep
+                crossing_time = time_after - (y_coord_now)*(timestep / (y_coord_now - y_coord_prev))
+                crossings[planet-1].append(crossing_time)
+
+    #calculate period from crossings
+    for i in range(1, len(body_names)):
+        times = crossings[i-1]
+        orbital_period = np.diff(times).mean()
+
+    return orbital_period
+
+#run simulation on range of timesteps
+timestep_array = [3600*1, 3600*2, 3600*4,3600*6, 3600*12, 3600*24, 3600*72, 3600*24*7, 3600*24*14]
+periods_array = []
+for i in range(len(timestep_array)):
+    periods_array.append(run_simulation(timestep_array[i]))
+
+#display results
+print(f'Orbital period results:\n')
+print(f'{'Timestep (hours)':<18}{'Seconds':>15}{'Hours':>15}{'Days':>15}')
+print(f'---------------------------------------------------------')
+for i in range(len(timestep_array)):
+    print(f'{timestep_array[i]/3600:<18,}{periods_array[i]:>15,.1f}{periods_array[i]/3600:>15,.2f}{periods_array[i]/(3600*24):>15,.2f}')
+\end{lstlisting}
+
+structured\_3.py
+\begin{lstlisting}[language=Python]
+import numpy as np
+import matplotlib.pyplot as plt
+from tqdm import tqdm
+from orbits import initial_positions, initial_velocity, body_update
+
+#Orbiting bodies data
+AU = 1.495978707e11
+body_names = np.array(["Sun", "Erid"])
+masses = np.array([1.98892e30, 5.9742E24]) #arbitrary planet is given earth mass
+initial_radii = np.array([0, (0.4 + 1054/25000) * AU])
+
+def run_simulation(timestep):
+    #simulation settings
+    num_steps = int(3 * (365 * 24)) 
+
+    #create blank arrays of equal dimensions to store position and velocity data
+    x_positions = np.zeros((num_steps,len(body_names))); y_positions = np.zeros((num_steps,len(body_names)))
+    x_velocities = np.zeros((num_steps,len(body_names))); y_velocities = np.zeros((num_steps,len(body_names)))
+
+    #initialise position of all bodies surrounding the sun
+    x_positions[0], y_positions[0] = initial_positions(initial_radii)
+
+    #initialise velocities of all planets
+    x_velocities[0], y_velocities[0] = initial_velocity(x_positions[0], y_positions[0], masses)
+
+    #main simulation loop
+    crossings = [[] for i in range(len(body_names)-1)]
+    for loop in range(1, num_steps):
+        x_positions[loop], y_positions[loop], x_velocities[loop], y_velocities[loop] = body_update(x_positions[loop-1], y_positions[loop-1], x_velocities[loop-1], y_velocities[:][loop-1], timestep, masses)
+        
+        #check for axis crossing
+        for planet in range(1, len(body_names)):
+            y_coord_now = y_positions[loop][planet] - y_positions[loop][0]
+            y_coord_prev = y_positions[loop-1][planet] - y_positions[loop-1][0]
+            x_coord_now = x_positions[loop][planet] - x_positions[loop][0]
+
+            #look for sign change across axis 
+            if y_coord_prev * y_coord_now < 0 and x_coord_now > 0:
+                #timestep at [loop] = loop * timesteps
+                time_after = loop * timestep
+                crossing_time = time_after - (y_coord_now)*(timestep / (y_coord_now - y_coord_prev))
+                crossings[planet-1].append(crossing_time)
+
+    #calculate period from crossings
+    for i in range(1, len(body_names)):
+        times = crossings[i-1]
+        orbital_period = np.diff(times).mean()
+
+    return orbital_period
+
+def unstructured3_1():
+    #constants & settings
+    AU = 1.495978707e11
+    timestep = 12 * 3600 
+    num_steps = 5 * (365 * 2)
+
+    #create blank arrays of equal dimensions to store position and velocity data
+    x_positions = np.zeros((num_steps,len(body_names))); y_positions = np.zeros((num_steps,len(body_names)))
+    x_velocities = np.zeros((num_steps,len(body_names))); y_velocities = np.zeros((num_steps,len(body_names)))
+
+    #initialise position of all bodies surrounding the sun
+    x_positions[0], y_positions[0] = initial_positions(initial_radii)
+
+    #initialise velocities of all planets
+    x_velocities[0], y_velocities[0] = initial_velocity(x_positions[0], y_positions[0], masses)
+
+
+    #main simulation loop
+    for loop in tqdm(range(1, num_steps), ncols=90, desc="Plotting orbit", colour="#00bb82"):
+        x_positions[loop], y_positions[loop], x_velocities[loop], y_velocities[loop] = body_update(x_positions[loop-1], y_positions[loop-1], x_velocities[loop-1], y_velocities[:][loop-1], timestep, masses)
+
+
+    #plot orbits of bodies to screen
+    plt.figure(figsize=(6, 6))
+    plot_colours = ['#ef0000', "#3b8eb4"]
+    for i in range(len(body_names)):
+        if i == 0: #need to use marker for sun as it never moves
+            plt.plot(x_positions[0, i]/AU, y_positions[0, i]/AU, 'o', color=plot_colours[i], markersize=12, label=body_names[i]) #[0, i] used to avoid drawing same point over and over
+        else:
+            plt.plot(x_positions[:, i]/AU, y_positions[:, i]/AU, color=plot_colours[i], label=body_names[i])
+    plt.axis('equal')
+    plt.xlabel('X (AU)')
+    plt.ylabel('Y (AU)')
+    plt.legend()
+    plt.savefig("images/structured3.pdf")
+
+def unstructured3_2():
+    #run simulation on range of timesteps
+    timestep_array = [3600*1, 3600*2, 3600*4,3600*6, 3600*12, 3600*24, 3600*72, 3600*24*7, 3600*24*14]
+    periods_array = []
+    for i in tqdm(range(len(timestep_array)), ncols=90, desc="Calculating convergence", colour="#00bb82"):
+        periods_array.append(run_simulation(timestep_array[i]))
+
+    #display results
+    print(f'Orbital period results:\n')
+    print(f'{'Timestep (hours)':<18}{'Seconds':>15}{'Hours':>15}{'Days':>15}')
+    print(f'---------------------------------------------------------')
+    for i in range(len(timestep_array)):
+        print(f'{timestep_array[i]/3600:<18,}{periods_array[i]:>15,.1f}{periods_array[i]/3600:>15,.2f}{periods_array[i]/(3600*24):>15,.2f}')
+
+#run simulation
+if __name__=="__main__":
+    unstructured3_1()
+    unstructured3_2()
+\end{lstlisting}
+
+unstructured\_1\_moving\_sun.py
+\begin{lstlisting}
+import numpy as np
+import matplotlib.pyplot as plt
+from tqdm import tqdm
+from orbits import initial_positions, initial_velocity, body_update
+
+#constants
+AU = 1.495978707e11
+G = 6.67e-11
+M_SUN = 1.98892e30
+timestep = 12 * 3600 #3600 seconds = 1 hour
+num_steps = 3 * (365 * 24) 
+
+#constants & settings
+body_names = np.array(["Sun", "Earth"])
+masses = np.array([1.98892e30, 5.9742E24])
+initial_radii = np.array([0, 1.495978707e11])
+plot_colours = ['#ef0000', '#3c6690']
+
+#create blank arrays of equal dimensions to store position and velocity data
+x_positions = np.zeros((num_steps,len(body_names))); y_positions = np.zeros((num_steps,len(body_names)))
+x_velocities = np.zeros((num_steps,len(body_names))); y_velocities = np.zeros((num_steps,len(body_names)))
+
+
+#initialise position  and velocities of all bodies surrounding the sun
+x_positions[0], y_positions[0] = initial_positions(initial_radii)
+x_velocities[0], y_velocities[0] = initial_velocity(x_positions[0], y_positions[0], masses)
+
+#initialise velocity of sun to give system zero net momentum
+x_velocities[0, 0] = -np.sum(masses[1:] * x_velocities[0, 1:]) / masses[0]
+y_velocities[0, 0] = -np.sum(masses[1:] * y_velocities[0, 1:]) / masses[0]
+
+#main simulation loop
+crossings = [[] for i in range(len(body_names)-1)]
+for loop in tqdm(range(1, num_steps), ncols=90, desc="Running Simulation", colour="#00bb82"):
+    x_positions[loop], y_positions[loop], x_velocities[loop], y_velocities[loop] = body_update(x_positions[loop-1], y_positions[loop-1], x_velocities[loop-1], y_velocities[:][loop-1], timestep, masses)
+    #check for axis crossing
+    for planet in range(1, len(body_names)):
+        y_coord_now = y_positions[loop][planet] - y_positions[loop][0]
+        y_coor_prev = y_positions[loop-1][planet] - y_positions[loop-1][0]
+        x_coord_now = x_positions[loop][planet] - x_positions[loop][0]
+
+        #look for sign change across axis 
+        if y_coor_prev * y_coord_now < 0 and x_coord_now > 0:
+            #timestep at [loop] = loop * timesteps
+            time_after = loop * timestep
+            crossing_time = time_after - (y_coord_now)*(timestep / (y_coord_now - y_coor_prev))
+            crossings[planet-1].append(crossing_time)
+
+
+#print period data in table
+print(f'Orbital period results:\n')
+print(f'{'Planet':<12}{'Seconds':>15}{'Hours':>15}{'Days':>15}')
+print(f'---------------------------------------------------------')
+for i in range(1, len(body_names)):
+    times = crossings[i-1]
+    if len(times) < 2: #body needs to pass x axis twice to measure period
+        print(f'{body_names[i]:<12}{'Insufficient crossings':>45}')
+        continue
+    orbital_period = np.diff(times).mean()
+    print(f'{body_names[i]:<12}{orbital_period:>15,.1f}{orbital_period/3600:>15,.2f}{orbital_period/(3600*24):>15,.2f}')
+
+#plot orbits of bodies to screen
+plt.figure(figsize=(7, 7))
+for i in range(len(body_names)):
+    plt.plot(x_positions[:, i]/AU, y_positions[:, i]/AU, label=body_names[i], color=plot_colours[i])
+plt.legend()
+plt.axis('equal')
+plt.xlabel('X (AU)', fontsize=16)
+plt.ylabel('Y (AU)', fontsize=16)
+plt.savefig("images/unstructured_1_moving_sun.pdf")
+plt.show()
+\end{lstlisting}
+
+unstructured\_2\_1\_planetary\_convergence.py
+\begin{lstlisting}[language=Python]
+import numpy as np
+from tqdm import tqdm
+from orbits import initial_positions, initial_velocity, body_update
+
+#simulation settings
+num_steps = int(3 * (365 * 24))
+
+#Orbiting bodies data
+body_names = np.array(["Sun", "Mars"])
+masses = np.array([1.98892e30, 5.9742E24])
+initial_radii = np.array([0, 2.27956E11])
+
+#main simulation function
+def run_simulation(timestep):
+    #create blank arrays of equal dimensions to store position and velocity data
+    x_positions = np.zeros((num_steps,len(body_names))); y_positions = np.zeros((num_steps,len(body_names)))
+    x_velocities = np.zeros((num_steps,len(body_names))); y_velocities = np.zeros((num_steps,len(body_names)))
+
+    #initialise position of all bodies surrounding the sun
+    x_positions[0], y_positions[0] = initial_positions(initial_radii)
+
+    #initialise velocities of all planets
+    x_velocities[0], y_velocities[0] = initial_velocity(x_positions[0], y_positions[0], masses)
+
+    #main simulation loop
+    crossings = [[] for i in range(len(body_names)-1)]
+    for loop in range(1, num_steps):
+        x_positions[loop], y_positions[loop], x_velocities[loop], y_velocities[loop] = body_update(x_positions[loop-1], y_positions[loop-1], x_velocities[loop-1], y_velocities[:][loop-1], timestep, masses)
+        #check for axis crossing
+        for planet in range(1, len(body_names)):
+            y_coord_now = y_positions[loop][planet] - y_positions[loop][0]
+            y_coord_prev = y_positions[loop-1][planet] - y_positions[loop-1][0]
+            x_coord_now = x_positions[loop][planet] - x_positions[loop][0]
+
+            #look for sign change across axis 
+            if y_coord_prev * y_coord_now < 0 and x_coord_now > 0:
+                #timestep at [loop] = loop * timesteps
+                time_after = loop * timestep
+                crossing_time = time_after - (y_coord_now)*(timestep / (y_coord_now - y_coord_prev))
+                crossings[planet-1].append(crossing_time)
+
+    #calculate period from crossings
+    for i in range(1, len(body_names)):
+        times = crossings[i-1]
+        orbital_period = np.diff(times).mean()
+
+    return orbital_period
+
+#run simulation on range of timesteps
+timestep_array = [3600*1, 3600*2, 3600*4,3600*6, 3600*12, 3600*24, 3600*72, 3600*24*7, 3600*24*14]
+periods_array = []
+for i in tqdm(range(len(timestep_array)), ncols=90, desc="Running Simulation", colour="#00bb82"):
+    periods_array.append(run_simulation(timestep_array[i]))
+
+#display results
+print(f'Orbital period results:\n')
+print(f'{'Timestep (hours)':<18}{'Seconds':>15}{'Hours':>15}{'Days':>15}')
+print(f'---------------------------------------------------------')
+for i in range(len(timestep_array)):
+    print(f'{timestep_array[i]/3600:<18,}{periods_array[i]:>15,.1f}{periods_array[i]/3600:>15,.2f}{periods_array[i]/(3600*24):>15,.2f}')
+\end{lstlisting}
+
+unstructured\_2\_2\_solar\_system.py
+\begin{lstlisting}[language=Python]
+import numpy as np
+import matplotlib.pyplot as plt
+from tqdm import tqdm
+from orbits import initial_positions, initial_velocity, body_update
+
+#constants & settings
+AU = 1.495978707e11
+G = 6.67e-11
+body_names = np.array(["Sun", "Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune"])
+masses = np.array([1.98892e30, 3.30104E23 , 4.86732E24, 5.9742E24, 6.4169E23, 1.89813E27, 5.68319E26, 8.68103E25, 1.0241E26])
+initial_radii = np.array([0, 5.7909227E10 , 1.08209475E11, 1.495978707e11, 2.27956E11, 7.78340821E11, 1.426666422E12, 2.870658186E12, 4.498396441E12])
+
+timestep = 6 * 3600        #seconds per timestep
+num_steps = 300 * (365 * 4) #iterations per simulation
+
+#create blank arrays of equal dimensions to store position and velocity data
+x_positions = np.zeros((num_steps,len(body_names))); y_positions = np.zeros((num_steps,len(body_names)))
+x_velocities = np.zeros((num_steps,len(body_names))); y_velocities = np.zeros((num_steps,len(body_names)))
+
+#initialise position and velocities of all bodies surrounding the sun
+x_positions[0], y_positions[0] = initial_positions(initial_radii)
+x_velocities[0], y_velocities[0] = initial_velocity(x_positions[0], y_positions[0], masses)
+
+#initialise velocity of sun to give system zero net momentum
+x_velocities[0, 0] = -np.sum(masses[1:] * x_velocities[0, 1:]) / masses[0]
+y_velocities[0, 0] = -np.sum(masses[1:] * y_velocities[0, 1:]) / masses[0]
+
+#main simulation loop
+crossings = [[] for i in range(len(body_names)-1)]
+for loop in tqdm(range(1, num_steps), ncols=90, desc="Running Simulation", colour="#00bb82"):
+    x_positions[loop], y_positions[loop], x_velocities[loop], y_velocities[loop] = body_update(x_positions[loop-1], y_positions[loop-1], x_velocities[loop-1], y_velocities[loop-1], timestep, masses)
+    #check for axis crossing
+    for planet in range(1, len(body_names)):
+        y_coord_now = y_positions[loop][planet] - y_positions[loop][0]
+        y_coor_prev = y_positions[loop-1][planet] - y_positions[loop-1][0]
+        x_coord_now = x_positions[loop][planet] - x_positions[loop][0]
+
+        #look for sign change across axis 
+        if y_coor_prev * y_coord_now < 0 and x_coord_now > 0:
+            #timestep at [loop] = loop * timesteps
+            time_after = loop * timestep
+            crossing_time = time_after - (y_coord_now)*(timestep / (y_coord_now - y_coor_prev))
+            crossings[planet-1].append(crossing_time)
+
+
+#print period data in table
+print(f'Orbital period results:\n')
+print(f'{'Planet':<12}{'Seconds':>15}{'Hours':>15}{'Days':>15}')
+print(f'---------------------------------------------------------')
+for i in range(1, len(body_names)):
+    times = crossings[i-1]
+    if len(times) < 2: #body needs to pass x axis twice to measure period
+        print(f'{body_names[i]:<12}{'Insufficient crossings':>45}')
+        continue
+    orbital_period = np.diff(times).mean()
+    print(f'{body_names[i]:<12}{orbital_period:>15,.1f}{orbital_period/3600:>15,.2f}{orbital_period/(3600*24):>15,.2f}')
+
+
+#for very large simulations check if plotting is wanted
+plot_colours = ['#ef0000', '#8c8987', '#dfb18c', '#3c6690', '#ff6b4d', '#c98226', '#f8d280', '#5d8b8e', '#4e5a74']
+show_plot = 'y'
+if num_steps > 5000:
+    show_plot = input('Create plot? [y/n]: ') 
+
+if show_plot == 'y':
+    #plot orbits of bodies to screen
+    plt.figure(figsize=(7, 7))
+    for i in range(len(body_names)):
+        plt.plot(x_positions[:, i]/AU, y_positions[:, i]/AU, label=body_names[i], color=plot_colours[i])
+    plt.legend(loc="upper right")
+    plt.axis('equal')
+    plt.xlabel('X (AU)', fontsize=16)
+    plt.ylabel('Y (AU)', fontsize=16)
+    plt.tight_layout()
+    plt.savefig("images/unstructured_2_solar_system.pdf")
+
+    plt.xlim(-1.6, 1.6)
+    plt.ylim(-1.6, 1.6)
+    plt.savefig("images/unstructured_2_terrestrial_planets_only.pdf")
+
+    #plt.show()
+\end{lstlisting}
+
+unstructured\_3\_1\_terrestrial\_planet\_stability.py
+\begin{lstlisting}[language=Python]
+import numpy as np
+import math
+import matplotlib.pyplot as plt
+from tqdm import tqdm
+from orbits import initial_positions, initial_velocity, body_update
+
+def kinetic_energy(body_mass: np.ndarray, body_x_velocity: np.ndarray, body_y_velocity: np.ndarray) -> np.ndarray:
+    energy = 0.5 * body_mass * (body_x_velocity**2 + body_y_velocity**2)
+    return energy 
+
+#constants & settings
+AU = 1.495978707e11
+G = 6.67e-11
+body_names = np.array(["Sun", "Mercury", "Venus", "Earth", "Mars"])
+masses = np.array([1.98892e30, 3.30104E23 , 4.86732E24, 5.9742E24, 6.4169E23])
+initial_radii = np.array([0, 5.7909227E10 , 1.08209475E11, 1.495978707e11, 2.27956E11])
+plot_colours = ['#ef0000', '#8c8987', '#dfb18c', '#3c6690', '#ff6b4d', '#c98226', '#f8d280', '#5d8b8e', '#4e5a74', '#5d8b8e']
+
+timestep = 12 * 3600 #simulation time in seconds per timestep
+num_steps = 100 * (365 * 2)
+
+#create blank arrays of equal dimensions to store position and velocity data
+x_positions = np.zeros((num_steps,len(body_names))); y_positions = np.zeros((num_steps,len(body_names)))
+x_velocities = np.zeros((num_steps,len(body_names))); y_velocities = np.zeros((num_steps,len(body_names)))
+
+#initialise position  and velocities of all bodies surrounding the sun
+x_positions[0], y_positions[0] = initial_positions(initial_radii)
+x_velocities[0], y_velocities[0] = initial_velocity(x_positions[0], y_positions[0], masses)
+
+#initialise velocity of sun to give system zero net momentum
+x_velocities[0, 0] = -np.sum(masses[1:] * x_velocities[0, 1:]) / masses[0]
+y_velocities[0, 0] = -np.sum(masses[1:] * y_velocities[0, 1:]) / masses[0]
+
+#track Kinetic energy of all planets around the Sun
+planet_kinetic_energy = np.zeros((num_steps, len(body_names)-1))
+#populate arrays with initial KE of all planets
+planet_kinetic_energy[0] = kinetic_energy(masses[1:], x_velocities[0][1:], y_velocities[0][1:])
+
+#main simulation loop
+crossings = [[] for i in range(len(body_names)-1)]
+for loop in tqdm(range(1, num_steps), ncols=90, desc="Running Simulation", colour="#00bb82"):
+    #update position and velocity of all bodies
+    x_positions[loop], y_positions[loop], x_velocities[loop], y_velocities[loop] = body_update(x_positions[loop-1], y_positions[loop-1], x_velocities[loop-1], y_velocities[loop-1], timestep, masses)
+    
+    #calculate KE of all bodies
+    planet_kinetic_energy[loop] = kinetic_energy(masses[1:len(masses)], x_velocities[loop][1:len(masses)], y_velocities[loop][1:len(masses)])
+    
+    #check for axis crossing
+    for planet in range(1, len(body_names)):
+        y_coord_now = y_positions[loop][planet] - y_positions[loop][0]
+        y_coor_prev = y_positions[loop-1][planet] - y_positions[loop-1][0]
+        x_coord_now = x_positions[loop][planet] - x_positions[loop][0]
+
+        #look for sign change across axis 
+        if y_coor_prev * y_coord_now < 0 and x_coord_now > 0:
+            #timestep at [loop] = loop * timesteps
+            time_after = loop * timestep
+            crossing_time = time_after - (y_coord_now)*(timestep / (y_coord_now - y_coor_prev))
+            crossings[planet-1].append(crossing_time)
+
+
+#print period data in table
+print(f'Orbital period results:\n')
+print(f'{'Planet':<12}{'Seconds':>15}{'Hours':>15}{'Days':>15}{'Years (365.25 days)':>15}{'KE Deviation(%)':>18}')
+print(f'---------------------------------------------------------------------------')
+mean_planet_kinetic_energy = np.mean(planet_kinetic_energy, axis=0) #mean of column (planet) in array
+normalised_planet_energy = planet_kinetic_energy/mean_planet_kinetic_energy
+for i in range(1, len(body_names)):
+    times = crossings[i-1]
+    if len(times) < 2: #body needs to pass x axis twice to measure period
+        print(f'{body_names[i]:<12}{'Insufficient crossings':>45}')
+        continue
+    orbital_period = np.diff(times).mean()
+    
+    #print(normalised_planet_energy[i])
+    greatest_deviation = np.max(abs(normalised_planet_energy-1), axis=0)
+    print(f'{body_names[i]:<12}{orbital_period:>15,.1f}{orbital_period/3600:>15,.2f}{orbital_period/(3600*24):>15,.2f}{orbital_period/(3600*24*365.25):>15,.2f}{greatest_deviation[i-1]*100:>18,.3f}')
+
+#ask for plot
+show_plot = input('Create plot? [y/n]: ') 
+if show_plot == 'y':
+    # #plot orbits of bodies
+    plt.figure(1, figsize=(7, 7))
+    for i in range(len(body_names)):
+        plt.plot(x_positions[:, i]/AU, y_positions[:, i]/AU, label=body_names[i], color=plot_colours[i])
+    plt.legend(loc="upper right")
+    plt.axis('equal')
+    plt.xlabel('X (AU)', fontsize=12)
+    plt.ylabel('Y (AU)', fontsize=12)
+    plt.tight_layout()
+    plt.savefig("images/unstructured_3_terrestrial_planets_orbit.pdf")
+
+    #create normalised plot of planet energy
+    #terrestrial planets
+    fig2=plt.figure(2, figsize=(8, 6))
+    for planet in range(1, 5):
+        plt.subplot(2, 2, planet)
+        plt.plot(np.linspace(0, timestep*num_steps, num=num_steps)/(3600*24*365.25), normalised_planet_energy[:, planet-1], label=body_names[planet], color=plot_colours[planet])
+        plt.legend()
+    fig2.suptitle("Terrestrial Planets Stability")
+    fig2.supylabel('Normalised Kinetic Energy', fontsize=12)
+    fig2.supxlabel('Time (Years)', fontsize=12)
+    fig2.tight_layout()
+    plt.savefig("images/unstructured_3_1_terrestrial_only_energy.pdf")
+    plt.show()
+\end{lstlisting}
+
+unstructured\_3\_2\_solar\_system\_stability.py
+\begin{lstlisting}[language=Python]
+import numpy as np
+import math
+import matplotlib.pyplot as plt
+from tqdm import tqdm
+from orbits import initial_positions, initial_velocity, body_update
+
+def kinetic_energy(body_mass: np.ndarray, body_x_velocity: np.ndarray, body_y_velocity: np.ndarray) -> np.ndarray:
+    energy = 0.5 * body_mass * (body_x_velocity**2 + body_y_velocity**2)
+    return energy 
+
+#constants & settings
+AU = 1.495978707e11
+G = 6.67e-11
+body_names = np.array(["Sun", "Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune"])
+masses = np.array([1.98892e30, 3.30104E23 , 4.86732E24, 5.9742E24, 6.4169E23, 1.89813E27, 5.68319E26, 8.68103E25, 1.0241E26])
+initial_radii = np.array([0, 5.7909227E10 , 1.08209475E11, 1.495978707e11, 2.27956E11, 7.78340821E11, 1.426666422E12, 2.870658186E12, 4.498396441E12])
+plot_colours = ['#ef0000', '#8c8987', '#dfb18c', '#3c6690', '#ff6b4d', '#c98226', '#f8d280', '#5d8b8e', '#4e5a74', '#5d8b8e']
+
+timestep = 12 * 3600 #simulation time in seconds per timestep
+num_steps = 300 * (365 * 2)
+
+#create blank arrays of equal dimensions to store position and velocity data
+x_positions = np.zeros((num_steps,len(body_names))); y_positions = np.zeros((num_steps,len(body_names)))
+x_velocities = np.zeros((num_steps,len(body_names))); y_velocities = np.zeros((num_steps,len(body_names)))
+
+#initialise position  and velocities of all bodies surrounding the sun
+x_positions[0], y_positions[0] = initial_positions(initial_radii)
+x_velocities[0], y_velocities[0] = initial_velocity(x_positions[0], y_positions[0], masses)
+
+#initialise velocity of sun to give system zero net momentum
+x_velocities[0, 0] = -np.sum(masses[1:] * x_velocities[0, 1:]) / masses[0]
+y_velocities[0, 0] = -np.sum(masses[1:] * y_velocities[0, 1:]) / masses[0]
+
+#track Kinetic energy of all planets around the Sun
+planet_kinetic_energy = np.zeros((num_steps, len(body_names)-1))
+#populate arrays with initial KE of all planets
+planet_kinetic_energy[0] = kinetic_energy(masses[1:], x_velocities[0][1:], y_velocities[0][1:])
+
+#main simulation loop
+crossings = [[] for i in range(len(body_names)-1)]
+for loop in tqdm(range(1, num_steps), ncols=90, desc="Running Simulation", colour="#00bb82"):
+    #update position and velocity of all bodies
+    x_positions[loop], y_positions[loop], x_velocities[loop], y_velocities[loop] = body_update(x_positions[loop-1], y_positions[loop-1], x_velocities[loop-1], y_velocities[loop-1], timestep, masses)
+    
+    #calculate KE of all bodies
+    planet_kinetic_energy[loop] = kinetic_energy(masses[1:len(masses)], x_velocities[loop][1:len(masses)], y_velocities[loop][1:len(masses)])
+    
+    #check for axis crossing
+    for planet in range(1, len(body_names)):
+        y_coord_now = y_positions[loop][planet] - y_positions[loop][0]
+        y_coor_prev = y_positions[loop-1][planet] - y_positions[loop-1][0]
+        x_coord_now = x_positions[loop][planet] - x_positions[loop][0]
+
+        #look for sign change across axis 
+        if y_coor_prev * y_coord_now < 0 and x_coord_now > 0:
+            #timestep at [loop] = loop * timesteps
+            time_after = loop * timestep
+            crossing_time = time_after - (y_coord_now)*(timestep / (y_coord_now - y_coor_prev))
+            crossings[planet-1].append(crossing_time)
+
+
+#print period data in table
+print(f'Orbital period results:\n')
+print(f'{'Planet':<12}{'Seconds':>15}{'Hours':>15}{'Days':>15}{'Years (365.25 days)':>15}{'KE Deviation(%)':>18}')
+print(f'---------------------------------------------------------------------------')
+mean_planet_kinetic_energy = np.mean(planet_kinetic_energy, axis=0) #mean of column (planet) in array
+normalised_planet_energy = planet_kinetic_energy/mean_planet_kinetic_energy
+for i in range(1, len(body_names)):
+    times = crossings[i-1]
+    if len(times) < 2: #body needs to pass x axis twice to measure period
+        print(f'{body_names[i]:<12}{'Insufficient crossings':>45}')
+        continue
+    orbital_period = np.diff(times).mean()
+    
+    #print(normalised_planet_energy[i])
+    greatest_deviation = np.max(abs(normalised_planet_energy-1), axis=0)
+    print(f'{body_names[i]:<12}{orbital_period:>15,.1f}{orbital_period/3600:>15,.2f}{orbital_period/(3600*24):>15,.2f}{orbital_period/(3600*24*365.25):>15,.2f}{greatest_deviation[i-1]*100:>18,.2f}')
+
+
+#for very large simulations check if plotting is wanted
+show_plot = 'y'
+if num_steps > 5000:
+    show_plot = input('Create plot? [y/n]: ') 
+
+if show_plot == 'y':
+    # #plot orbits of bodies
+    plt.figure(1, figsize=(7, 7))
+    for i in range(len(body_names)):
+        plt.plot(x_positions[:, i]/AU, y_positions[:, i]/AU, label=body_names[i], color=plot_colours[i])
+    plt.legend(loc="upper right")
+    plt.axis('equal')
+    plt.xlabel('X (AU)')
+    plt.ylabel('Y (AU)')
+    plt.savefig("images/unstructured_3_total_system_studying_stability.pdf")
+
+    #create normalised plot of planet energy
+    #terrestrial planets
+    fig2 = plt.figure(2, figsize=(8, 6))
+    for planet in range(1, 5):
+        plt.subplot(2, 2, planet)
+        plt.plot(np.linspace(0, timestep*num_steps, num=num_steps)/(3600*24*365.25), normalised_planet_energy[:, planet-1], label=body_names[planet], color=plot_colours[planet])
+        plt.legend()
+    fig2.suptitle("Terrestrial Planets Stability")
+    fig2.supxlabel('Time (years)', fontsize=16)
+    fig2.supylabel('Normalised Kinetic Energy', fontsize=16)
+    fig2.tight_layout()
+    plt.savefig("images/unstructured_3_2_terrestrial_body_energy_subplot.pdf")
+
+    #gas giants
+    fig3 = plt.figure(3, figsize=(8, 6))
+    for planet in range(5, 9):
+        plt.subplot(2, 2, planet-4)
+        plt.plot(np.linspace(0, timestep*num_steps, num=num_steps)/(3600*24*365.25), normalised_planet_energy[:, planet-1], label=body_names[planet], color=plot_colours[planet])
+        plt.legend()
+    fig3.suptitle("Gaseous Planets Stability")
+    fig3.supxlabel('Time (years)', fontsize=16)
+    fig3.supylabel('Normalised Kinetic Energy', fontsize=16)
+    fig3.tight_layout()
+    plt.savefig("images/unstructured_3_2_gaseous_planet_stability.pdf")
+    plt.show()
+\end{lstlisting}
+
+unstructured\_4\_1\_resonance\_search.py
+\begin{lstlisting}[language=Python]
+import numpy as np
+import matplotlib.pyplot as plt
+from tqdm import tqdm
+from orbits import initial_positions, initial_velocity, body_update
+
+#global parameters
+AU = 1.495978707e11
+G = 6.67e-11
+body_names = np.array(["Sun", "Jupiter", "Asteroid"])
+masses = np.array([1.98892e30, 1.89813E27, 0.95E21])
+jupiter_radius = 7.78479E11
+
+def kinetic_energy(body_mass, body_x_velocity, body_y_velocity):
+    energy = 0.5 * body_mass * (body_x_velocity**2 + body_y_velocity**2)
+    return energy
+
+#main simulation loop
+def asteroid_stability_simulation(target_radii):
+    """This function accepts an array of radii of asteroids. A simulation is ran for timestep*num_steps seconds which 
+    returns relevant information on the positions, velocities, energies and periods of the asteroids input and jupiter's period. """
+
+    #initialise arrays which will be returned to the user
+    simulation_asteroid_x_positions = [[] for i in range(len(target_radii))]; simulation_asteroid_y_positions = [[] for i in range(len(target_radii))]
+    simulation_asteroid_energies = [[] for i in range(len(target_radii))]; simulation_asteroid_deviations = [[] for i in range(len(target_radii))]
+    simulation_asteroid_crossings = [[] for i in range(len(target_radii))]; simulation_jupiter_crossings = [[] for i in range(len(target_radii))]
+
+    #single progress bar covering every timestep of every asteroid
+    progress = tqdm(total=len(target_radii) * (num_steps - 1), ncols=90, desc='Simulation Running', colour="#00bb82")
+
+    for i in range(len(target_radii)):
+        initial_radii = np.array([0, jupiter_radius, target_radii[i]])
+
+        #create blank arrays of equal dimensions to store position and velocity data
+        x_positions = np.zeros((num_steps,len(body_names))); y_positions = np.zeros((num_steps,len(body_names)))
+        x_velocities = np.zeros((num_steps,len(body_names))); y_velocities = np.zeros((num_steps,len(body_names)))
+
+        #initialise position and velocity of all bodies surrounding the sun
+        x_positions[0], y_positions[0] = initial_positions(initial_radii)
+        x_velocities[0], y_velocities[0] = initial_velocity(x_positions[0], y_positions[0], masses)
+
+        #initialise velocity of sun to give system zero net momentum
+        x_velocities[0, 0] = -np.sum(masses[1:] * x_velocities[0, 1:]) / masses[0]
+        y_velocities[0, 0] = -np.sum(masses[1:] * y_velocities[0, 1:]) / masses[0]
+
+        #track KE of asteroids
+        body_energy = np.zeros((num_steps, len(body_names)))
+        body_energy[0] = kinetic_energy(masses[0:], x_velocities[0][0:], y_velocities[0][0:])
+        
+        crossings = [[] for j in range(len(body_names)-1)] 
+        for loop in range(1, num_steps):
+            x_positions[loop], y_positions[loop], x_velocities[loop], y_velocities[loop] = body_update(x_positions[loop-1], y_positions[loop-1], x_velocities[loop-1], y_velocities[:][loop-1], timestep, masses)
+            #Measure asteroid KE to gague orbit stability
+            body_energy[loop] = kinetic_energy(masses[:len(masses)], x_velocities[loop][:len(masses)], y_velocities[loop][:len(masses)])
+
+            #check for axis crossing
+            for planet in range(1, len(body_names)):
+                y_coord_now = y_positions[loop][planet] - y_positions[loop][0]
+                y_coor_prev = y_positions[loop-1][planet] - y_positions[loop-1][0]
+                x_coord_now = x_positions[loop][planet] - x_positions[loop][0]
+
+                #look for sign change across axis 
+                if y_coor_prev * y_coord_now < 0 and x_coord_now > 0:
+                    #timestep at [loop] = loop * timesteps
+                    time_after = loop * timestep
+                    crossing_time = time_after - (y_coord_now)*(timestep / (y_coord_now - y_coor_prev))
+                    crossings[planet-1].append(crossing_time)
+
+            if loop % 100 == 0:
+                progress.update(100)
+
+        #calculate energy deviation
+        normalised_energy = body_energy/np.mean(body_energy, axis=0)
+        energy_deviation = np.max(np.abs(normalised_energy-1), axis=0)
+
+        #save results for this iteration to asteroid info 
+        simulation_asteroid_x_positions[i] = x_positions[:, 2]  #type: ignore
+        simulation_asteroid_y_positions[i] = y_positions[:, 2]  #type: ignore
+        simulation_asteroid_energies[i] = body_energy[:, 2]     #type: ignore
+        simulation_asteroid_deviations[i] = energy_deviation[2]
+        simulation_asteroid_crossings[i] = crossings[1]
+        simulation_jupiter_crossings[i] = crossings[0]
+    
+    progress.update(progress.total - progress.n)
+    progress.close()
+    return simulation_asteroid_x_positions, simulation_asteroid_y_positions, simulation_asteroid_energies, simulation_asteroid_deviations, simulation_asteroid_crossings, simulation_jupiter_crossings
+
+#simulation parameters
+timestep = 24 * 3600    #24 hours is accurate enough for mars and so also asteroid belt.  
+num_steps = 50 * (365)  #runtime in years
+start_radius = 3.2 *AU
+end_radius = 3.4 * AU
+radius_increment = 0.01 * AU
+num_asteroids = int((end_radius-start_radius)/radius_increment +1)
+target_radii = np.linspace(start_radius, end_radius, num_asteroids) #if want to simulate only certain radii, replace target_radii with list of desired radii
+
+
+#run simulation
+asteroid_x_positions, asteroid_y_positions, asteroid_energies, asteroid_deviations, asteroid_crossings, jupiter_crossings = asteroid_stability_simulation(target_radii)
+
+
+#display results 
+print(f'Orbital period results:\n')
+print(f'{'Radius (AU)':<15}{'Seconds':>15}{'Days':>15}{'Resonance':>15}{'Deviation (%)':>15}')
+print(f'---------------------------------------------------------------------------')
+for i in range(len(target_radii)):
+    asteroid_times = asteroid_crossings[i] #number of times the asteroid orbits the sun
+    jupiter_times = jupiter_crossings[i]
+    if len(asteroid_times) < 2 or len(jupiter_times) < 2: #body needs to pass x axis twice to measure period
+        print(f'{f'{i}':<15}{'Insufficient crossings':>75}')
+        continue
+    orbital_period = np.diff(asteroid_times).mean()
+    jupiter_period = np.diff(jupiter_times).mean()
+    period_ratio = jupiter_period / orbital_period
+    print(f'{target_radii[i]/AU:<15,.2f}{orbital_period:>15,.1f}{orbital_period/3600:>15,.2f}{period_ratio:>15,.3f}{asteroid_deviations[i]*100:15,.1f}')
+
+\end{lstlisting}
+
+unstructured\_4\_2\_circular\_asteroids.py
+\begin{lstlisting}[language=Python]
+import numpy as np
+import matplotlib.pyplot as plt
+from tqdm import tqdm
+from orbits import initial_positions, initial_velocity, body_update
+
+def kinetic_energy(body_mass, body_x_velocity, body_y_velocity):
+    energy = 0.5 * body_mass * (body_x_velocity**2 + body_y_velocity**2)
+    return energy
+
+#constants
+AU = 1.495978707e11
+G = 6.67e-11
+M_SUN = 1.98892e30
+
+#simulation runtime parameters
+timestep = 72 * 3600                  #seconds per timestep
+num_steps = int(500 * 3 * (365/3)/7)  #iterations per simulaiton
+
+#use arrays to store data for each body
+body_names = np.array(["Sun", "Jupiter", "Asteroid"])
+masses = np.array([1.98892e30, 1.89813E27, 0.95E21])
+jupiter_radius = 7.78479E11
+kirkwood_radii = [2.5*AU, 2.83*AU, 2.96*AU, 3.28*AU, 2.6*AU] #2.6AU asteroid is expected to be stable
+
+def main_simulation(asteroid_radius: float):
+    """Simulates the Sun, Jupiter and a single asteroid starting at asteroid_radius.
+    Returns the x and y positions of all bodies and the kinetic energy of the asteroid."""
+
+    initial_radii = np.array([0, jupiter_radius, asteroid_radius])
+
+    #create blank arrays of equal dimensions to store position and velocity data
+    x_positions = np.zeros((num_steps,len(body_names))); y_positions = np.zeros((num_steps,len(body_names)))
+    x_velocities = np.zeros((num_steps,len(body_names))); y_velocities = np.zeros((num_steps,len(body_names)))
+
+    #initialise position and velocity of all bodies surrounding the sun
+    x_positions[0], y_positions[0] = initial_positions(initial_radii)
+    x_velocities[0], y_velocities[0] = initial_velocity(x_positions[0], y_positions[0], masses)
+
+    #initialise velocity of sun to give system zero net momentum
+    x_velocities[0, 0] = -np.sum(masses[1:] * x_velocities[0, 1:]) / masses[0]
+    y_velocities[0, 0] = -np.sum(masses[1:] * y_velocities[0, 1:]) / masses[0]
+
+    #track KE of asteroid
+    asteroid_energy = np.zeros(num_steps)
+    asteroid_energy[0] = kinetic_energy(masses[2], x_velocities[0][2], y_velocities[0][2])
+
+    #main simulation loop
+    for loop in tqdm(range(1, num_steps), ncols=90, desc=f"Asteroid at {asteroid_radius/AU:.2f} AU", colour="#00bb82"):
+        x_positions[loop], y_positions[loop], x_velocities[loop], y_velocities[loop] = body_update(x_positions[loop-1], y_positions[loop-1], x_velocities[loop-1], y_velocities[loop-1], timestep, masses)
+        #Measure astroid KE to gague orbit stability
+        asteroid_energy[loop] = kinetic_energy(masses[2], x_velocities[loop][2], y_velocities[loop][2])
+
+    return x_positions, y_positions, asteroid_energy
+
+
+#run simulation
+all_x_positions = []; all_y_positions = []; all_asteroid_energy = []
+for radius in kirkwood_radii:
+    x_positions, y_positions, asteroid_energy = main_simulation(radius)
+    all_x_positions.append(x_positions); all_y_positions.append(y_positions)
+    all_asteroid_energy.append(asteroid_energy)
+
+#print energy deviation data in table
+normalised_energy = [energy/np.mean(energy) for energy in all_asteroid_energy]
+deviation = [np.max(energy)-1 for energy in normalised_energy]
+
+print(f'\nEnergy Deviation Data:\n')
+print(f'{'Radius (AU)':<15}{'Deviation (%)':>15}')
+print(f'------------------------------')
+for i in range(len(kirkwood_radii)):
+    print(f'{kirkwood_radii[i]/AU:<15,.2f}{deviation[i]*100:<15,.1f}')
+
+plot_colours = ['#ef0000', '#c98226', '#8c8987', '#dfb18c', '#3c6690', '#ff6b4d', '#f8d280', '#5d8b8e', '#4e5a74']
+
+#plot orbits of bodies to screen
+plt.figure(1, figsize=(6, 6))
+#plot trajectory of sun and jupiter once since its almost completely unchanged 
+plt.plot(all_x_positions[0][:, 0]/AU, all_y_positions[0][:, 0]/AU, color=plot_colours[0], label=body_names[0])
+#plt.plot(all_x_positions[0][:, 1]/AU, all_y_positions[0][:, 1]/AU, color=plot_colours[1], label=body_names[1])
+for i in range(len(kirkwood_radii)):
+    plt.plot(all_x_positions[i][:, 2]/AU, all_y_positions[i][:, 2]/AU, color=plot_colours[i+2], label=f'Asteroid {kirkwood_radii[i]/AU:.2f} AU')
+plt.xlabel('X [AU]', fontsize=16)
+plt.ylabel('Y [AU]', fontsize=16)
+plt.legend(loc="upper right")
+plt.tight_layout()
+plt.savefig('images/unstructured_4_2_circular_orbits.pdf')
+
+#create normalised plot of asteroid energy
+plt.figure(2, figsize=(6, 6))
+plt.title("Asteroid Kinetic Energy")
+for i in range(len(kirkwood_radii)):
+    plt.plot(np.linspace(0, timestep*num_steps, num=num_steps)/(3600*24*365), normalised_energy[i], color=plot_colours[i+2], label=f'Asteroid {kirkwood_radii[i]/AU:.2f} AU') 
+plt.ylabel('Normalised Kinetic Energy', fontsize=16)
+plt.xlabel('Time [Years]', fontsize=16)
+plt.legend(loc="upper left")
+plt.tight_layout()
+plt.savefig('images/unstructured_4_2_circular_energies.pdf')
+
+#plt.show()
+\end{lstlisting}
+
+unstructured\_4\_3\_elliptical\_asteroids.py
+\begin{lstlisting}[language=Python]
+import numpy as np
+import matplotlib.pyplot as plt
+from tqdm import tqdm
+from orbits import initial_positions, body_update, elliptical_initial_velocity, orbital_elements
+
+#constants
+AU = 1.495978707e11
+G = 6.67e-11
+M_SUN = 1.98892e30
+YEAR = 365.25 * 24 * 3600
+
+#simulation runtime parameters
+timestep = 10 * 24 * 3600                   #seconds per timestep
+num_steps =  int(20000 * 365.25 / 10)       #iterations per simulaiton
+save_every = 500 
+
+#use arrays to store data for each body 
+masses = np.array([1.98892e30, 1.89813E27, 0.95E21])
+Jupiter_radius = 7.78479E11
+kirkwood_radii = [2.5*AU, 2.83*AU, 2.96*AU, 3.28*AU, 2.6*AU] #2.6 is expected to be stable
+eccentricities = np.array([0, 0.048, 0.15])
+
+def main_simulation(asteroid_radius: float):
+    """Simulates the Sun, Jupiter and a single asteroid starting at asteroid_radius.
+    Returns the time, sun and asteroid positions, and the asteroid's semi-major axis and eccentricity."""
+
+    np.random.seed(40451054) #helpful for debugging as get same random simulation each time
+
+    initial_radii = np.array([0, Jupiter_radius, asteroid_radius]) * (1 + eccentricities)
+
+    #current position and velocity of all bodies (only a few saved steps are stored)
+    x_positions, y_positions = initial_positions(initial_radii)
+    x_velocities, y_velocities = elliptical_initial_velocity(x_positions, y_positions, eccentricities)
+
+    #initialise velocity of sun to give system zero net momentum
+    x_velocities[0] = -np.sum(masses[1:] * x_velocities[1:]) / masses[0]
+    y_velocities[0] = -np.sum(masses[1:] * y_velocities[1:]) / masses[0]
+    
+    #lists to store saved data
+    times = []; semimajor_axis = []; eccentricity = []
+    
+    #main simulation loop
+    for loop in tqdm(range(num_steps), ncols=90, desc=f"Asteroid at {asteroid_radius/AU:.2f} AU", colour="#00bb82"): 
+        if loop % save_every == 0:
+            #Measure asteroid orbital elements 
+            a, e = orbital_elements(x_positions[2], y_positions[2], x_velocities[2], y_velocities[2], x_positions[0], y_positions[0], x_velocities[0], y_velocities[0])
+            times.append(loop * timestep / YEAR)
+            semimajor_axis.append(a/AU); eccentricity.append(e)
+        x_positions, y_positions, x_velocities, y_velocities = body_update(x_positions, y_positions, x_velocities, y_velocities, timestep, masses)
+ 
+    return np.array(times), np.array(semimajor_axis), np.array(eccentricity)
+
+#run simulation
+all_times = []; all_a = []; all_e = []
+for radius in kirkwood_radii:
+    t, a, e = main_simulation(radius)
+    all_a.append(a)
+    all_e.append(e)
+    all_times.append(t)
+
+#print eccentricity data in table
+print(f'\nEccentricity Data:\n')
+print(f"{'Radius (AU)':<15}{'Max e':>10}{'Closest approach to Sun (AU)':>15}")
+print(f'----------------------------------------')
+for i in range(len(kirkwood_radii)):
+    perihelion = all_a[i] * (1 - all_e[i])
+    print(f'{kirkwood_radii[i]/AU:<15,.2f}{np.max(all_e[i]):>10.3f}{np.min(perihelion):>15.2f}') #if perihelion <1.7AU asteroid would have been collected by mars
+
+
+#create plot of asteroid eccentricity against time
+plot_colours = ['#dfb18c', '#ef0000', '#c98226',  '#4e5a74', '#8c8987', '#3c6690', '#ff6b4d', '#f8d280', '#5d8b8e']
+plot_labels = ['3:1', '5:2', '7:3', '2:1', 'Stable']
+plt.figure(figsize=(6, 6))
+plt.title("Asteroid Eccentricity")
+for i in range(len(kirkwood_radii)):
+    plt.plot(all_times[i], all_e[i], color=plot_colours[i+2], label=f'{plot_labels}') 
+plt.ylabel('Eccentricity', fontsize=16)
+plt.xlabel('Time [years]', fontsize=16)
+plt.legend(loc="upper left")
+plt.tight_layout()
+plt.savefig('images/unstructured_4_3_elliptical_eccentricities.pdf')
+ 
+plt.show()
+\end{lstlisting}
 
 
 \end{document}

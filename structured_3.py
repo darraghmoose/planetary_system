@@ -51,8 +51,8 @@ def run_simulation(timestep):
 def unstructured3_1():
     #constants & settings
     AU = 1.495978707e11
-    timestep = 12 * 3600 #3600 seconds = 1 hour
-    num_steps = 5 * (365 * 2)  #multiple of earth years
+    timestep = 12 * 3600 
+    num_steps = 5 * (365 * 2)
 
     #create blank arrays of equal dimensions to store position and velocity data
     x_positions = np.zeros((num_steps,len(body_names))); y_positions = np.zeros((num_steps,len(body_names)))
@@ -83,7 +83,6 @@ def unstructured3_1():
     plt.ylabel('Y (AU)')
     plt.legend()
     plt.savefig("images/structured3.pdf")
-    #plt.show()
 
 def unstructured3_2():
     #run simulation on range of timesteps
